@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": "mobile"
+		}
+	],
+	"settings": {
+		"editor.formatOnSave": true
+	}
+}
