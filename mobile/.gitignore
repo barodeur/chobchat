@@ -71,3 +71,9 @@ buck-out/
 web-build/
 
 # @end expo-cli
+
+__generated__
+*.bs.js
+/lib/
+.bsb.lock
+.merlin

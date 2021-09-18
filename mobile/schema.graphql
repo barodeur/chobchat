@@ -1,0 +1,62 @@
+#
+type Query {
+  # Get a user by id
+  user(
+    # The id of the user
+    id: String
+  ): User
+
+  # Get all users
+  users: [User]
+
+  # Get all todos
+  todos: [Todo]
+}
+
+#
+input UpdateTodoInput {
+  #
+  id: String
+
+  #
+  description: String
+
+  #
+  done: Boolean
+}
+
+#
+type User {
+  #
+  id: String
+
+  #
+  name: String
+
+  #
+  email: String
+
+  #
+  todos: [Todo]
+}
+
+#
+type Todo {
+  #
+  id: String
+
+  #
+  description: String
+
+  #
+  done: Boolean
+}
+
+#
+type Mutation {
+  #
+  updateTodo(
+    # Todo input
+    input: UpdateTodoInput!
+  ): Todo
+}

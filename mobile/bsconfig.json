@@ -1,0 +1,19 @@
+{
+  "name": "your-project-name",
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    }
+  ],
+  "package-specs": [
+    {
+      "module": "es6",
+      "in-source": true
+    }
+  ],
+  "suffix": ".bs.js",
+  "reason": { "react-jsx": 3 },
+  "ppx-flags": ["rescript-relay/ppx"],
+  "bs-dependencies": ["@rescript/react", "rescript-relay", "reason-promise", "bs-fetch"]
+}
