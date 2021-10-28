@@ -15,5 +15,11 @@
   "suffix": ".bs.js",
   "reason": { "react-jsx": 3 },
   "ppx-flags": ["rescript-relay/ppx"],
-  "bs-dependencies": ["@rescript/react", "rescript-relay", "reason-promise", "bs-fetch"]
+  "bs-dependencies": [
+    "@rescript/react",
+    "bs-fetch",
+    "reason-promise",
+    "rescript-relay",
+    "rescript-react-native"
+  ]
 }
