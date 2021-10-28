@@ -9,7 +9,7 @@
     "re:start": "rescript build -w",
     "relay": "rescript-relay-compiler",
     "relay:watch": "rescript-relay-compiler --watch",
-    "build": "next build"
+    "build": "yarn re:build && yarn next build"
   },
   "dependencies": {
     "@emotion/native": "^11.0.0",
