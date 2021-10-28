@@ -7,5 +7,7 @@ const withTM = require("next-transpile-modules")(["react-native-web"])
 
 module.exports = withPlugins(
   [withTM, withFonts, withImages, [withExpo, { projectRoot: __dirname }]],
-  {}
+  {
+    pageExtensions: ["bs.js", "js"],
+  }
 )
