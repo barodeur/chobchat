@@ -1,5 +1,5 @@
 {
-  "name": "your-project-name",
+  "name": "chobchat",
   "sources": [
     {
       "dir": "src",
@@ -8,18 +8,18 @@
   ],
   "package-specs": [
     {
-      "module": "es6",
+      "module": "commonjs",
       "in-source": true
     }
   ],
   "suffix": ".bs.js",
   "reason": { "react-jsx": 3 },
-  "ppx-flags": ["rescript-relay/ppx"],
   "bs-dependencies": [
     "@rescript/react",
+    "@ryyppy/rescript-promise",
     "bs-fetch",
-    "reason-promise",
-    "rescript-relay",
-    "rescript-react-native"
+    "rescript-jzon",
+    "rescript-react-native",
+    "rescript-recoil"
   ]
 }

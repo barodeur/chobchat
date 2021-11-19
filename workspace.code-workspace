@@ -1,10 +1,15 @@
 {
-	"folders": [
-		{
-			"path": "mobile"
-		}
-	],
-	"settings": {
-		"editor.formatOnSave": true
-	}
+  "folders": [
+    {
+      "name": "Mobile",
+      "path": "mobile"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "github.copilot.enable": {
+      "*": true,
+      "rescript": false
+    }
+  }
 }

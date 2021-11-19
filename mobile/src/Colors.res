@@ -1,2 +1,7 @@
-let primary = ReactNative.Color.rgb(~r=51, ~g=136, ~b=255)
-let white = ReactNative.Color.rgb(~r=255, ~g=255, ~b=255)
+type color = string
+
+let green = "#46cc8d"
+let olive = "#9da139"
+let oliveLight = "#bed190"
+let grey = "#f3f1f6"
+let red = "#fa4655"

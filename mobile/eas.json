@@ -1,0 +1,11 @@
+{
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "paul@chobert.fr",
+        "ascAppId": "1595722390",
+        "appleTeamId": "D7MA23R464"
+      }
+    }
+  }
+}

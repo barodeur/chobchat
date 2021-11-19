@@ -1,6 +1,11 @@
+open ReactNative
+
 @react.component
-let make = () => {
-  <ReactNativeSafeAreaContext.SafeAreaProvider>
-    <ConversationScreen />
-  </ReactNativeSafeAreaContext.SafeAreaProvider>
-}
+let make = () => <>
+  <Recoil.RecoilRoot>
+    <StatusBar barStyle=#lightContent />
+    <ReactNativeSafeAreaContext.SafeAreaProvider>
+      <AppLoader> <Authentication> <ConversationScreen /> </Authentication> </AppLoader>
+    </ReactNativeSafeAreaContext.SafeAreaProvider>
+  </Recoil.RecoilRoot>
+</>
