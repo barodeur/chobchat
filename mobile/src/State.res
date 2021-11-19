@@ -116,11 +116,19 @@ let roomEventsState: Recoil.atomFamily<
 let syncObservable = Recoil.selector({
   key: "SyncSubject",
   get: ({get}) =>
-    get(matrixClient)->Result.map(res =>
-      res->Option.map(client =>
-        client->Matrix.createSyncObservable->Rx.Observable.pipe(Rx.Operator.share())
+    switch (get(matrixClient), get(mainRoomId)) {
+    | (Ok(Some(client)), Ok(roomId)) =>
+      client
+      ->Matrix.createSyncObservable(
+        ~filter=Matrix.Filter.t(~room=Matrix.Filter.roomFilter(~rooms=[roomId], ()), ()),
+        (),
       )
-    ),
+      ->Rx.Observable.pipe(Rx.Operator.share())
+      ->Some
+      ->Ok
+    | (Ok(None), _) => None->Ok
+    | (matrixClientRes, mainRoomIdRes) => mergeResultErrors2(matrixClientRes, mainRoomIdRes)
+    },
 })
 
 let useSync = roomId => {

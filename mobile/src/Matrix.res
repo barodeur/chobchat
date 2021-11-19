@@ -297,6 +297,27 @@ module Event = {
   type t = RoomEvent((string, RoomEvent.t))
 }
 
+module Filter = {
+  @deriving(abstract)
+  type roomFilter = {@optional rooms: array<string>}
+
+  @deriving(abstract)
+  type t = {@optional room: roomFilter}
+
+  let codec = Jzon.object1(
+    filter => filter->roomGet,
+    room => t(~room?, ())->Ok,
+    Jzon.field(
+      "room",
+      Jzon.object1(
+        roomFilter => roomFilter->roomsGet,
+        rooms => roomFilter(~rooms?, ())->Ok,
+        Jzon.field("rooms", Jzon.array(Jzon.string))->Jzon.optional,
+      ),
+    )->Jzon.optional,
+  )
+}
+
 module Sync = {
   type timeline = {events: array<RoomEvent.t>}
   type joinedRoom = {timeline: timeline}
@@ -328,14 +349,14 @@ module Sync = {
     Jzon.field("rooms", roomsCodec)->Jzon.optional,
   )
 
-  let sync = (client, ~since=?, ~timeout=10000, ()) =>
+  let sync = (client, ~since=?, ~timeout=10000, ~filter=?, ()) =>
     client
     ->fetch(
       "/sync?"->Js.String2.concat(
         [
           ("since", since),
           ("timeout", Some(timeout->Belt.Int.toString)),
-          ("filter", Some(`{"room": {"rooms": ["!lLyJgZXOGOixYldJom:chobert.fr"]}}`)),
+          ("filter", filter->Belt.Option.map(filter => Filter.codec->Jzon.encodeString(filter))),
         ]
         ->Belt.Array.keepMap(((key, opt)) => opt->Belt.Option.map(v => `${key}=${v}`))
         ->Belt.Array.joinWith("&", v => v),
@@ -347,11 +368,11 @@ module Sync = {
 }
 
 // type action = Continue(option<string>) | Break
-let createSyncObservable = client => {
+let createSyncObservable = (client, ~filter=?, ()) => {
   Rx.Observable.make(subscriber => {
     let rec loop: option<string> => Promise.t<unit> = since => {
       client
-      ->Sync.sync(~since?, ())
+      ->Sync.sync(~since?, ~filter?, ())
       ->Promise.then(res => {
         res->Belt.Result.mapWithDefault(Promise.resolve(), payload => {
           payload.rooms->Belt.Option.mapWithDefault((), rooms =>
