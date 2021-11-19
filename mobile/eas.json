@@ -7,5 +7,9 @@
         "appleTeamId": "D7MA23R464"
       }
     }
+  },
+  "cli": {
+    "version": ">= 0.36.1",
+    "requireCommit": true
   }
 }
