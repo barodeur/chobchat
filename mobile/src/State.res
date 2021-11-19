@@ -10,15 +10,19 @@ let mergeResultErrors2 = (resA, resB) =>
   ->Belt.Array.concatMany
   ->Result.error
 
-let homeserverUrl = Recoil.constSelector(
-  Config.homeserverUrl->Belt.Option.mapWithDefault(
-    Error([MissingConfig("homerserverUrl")]),
-    url => Ok(url),
-  ),
-)
-let mainRoomId = Recoil.constSelector(
-  Config.roomId->Belt.Option.mapWithDefault(Error([MissingConfig("roomId")]), url => Ok(url)),
-)
+let homeserverUrl = Recoil.selector({
+  key: "Config.homeserverUrl",
+  get: _ =>
+    Config.homeserverUrl->Belt.Option.mapWithDefault(
+      Error([MissingConfig("homerserverUrl")]),
+      url => Ok(url),
+    ),
+})
+let mainRoomId = Recoil.selector({
+  key: "Config.roomId",
+  get: _ =>
+    Config.roomId->Belt.Option.mapWithDefault(Error([MissingConfig("roomId")]), url => Ok(url)),
+})
 let guestMatrixClient = Recoil.selector({
   key: "MatixClient/Guest",
   get: ({get}) => get(homeserverUrl)->Belt.Result.map(Matrix.createClient(_)),
