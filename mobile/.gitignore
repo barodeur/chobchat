@@ -77,6 +77,7 @@ __generated__
 /lib/
 .bsb.lock
 .merlin
+.env.local
 
 # @generated: @expo/next-adapter@3.1.6
 /.expo/*
