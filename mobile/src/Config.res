@@ -1,25 +1,18 @@
-module Web = {
-  @val @scope(("process", "env")) @return(nullable)
-  external homeserverUrl: option<string> = "NEXT_PUBLIC_HOMESERVER_URL"
-  @val @scope(("process", "env")) @return(nullable)
-  external roomId: option<string> = "NEXT_PUBLIC_ROOM_ID"
+type t = {
+  homeserverUrl: string,
+  roomId: string,
 }
+
+let recoilAtom: Recoil.readWrite<option<t>> = Recoil.atom({
+  key: "Config",
+  default: None,
+})
 
 module Mobile = {
-  @module("expo-constants") @scope(("default", "manifest", "extra")) @return(nullable)
-  external homeserverUrl: option<string> = "homeserverUrl"
-  @module("expo-constants") @scope(("default", "manifest", "extra")) @return(nullable)
-  external roomId: option<string> = "roomId"
+  @module("expo-constants") @scope(("default", "manifest")) external config: t = "extra"
 }
 
-let homeserverUrl = switch PlatformX.currentAdapter {
-| Web => Web.homeserverUrl
-| Mobile => Mobile.homeserverUrl
-| _ => None
-}
-
-let roomId = switch PlatformX.currentAdapter {
-| Web => Web.roomId
-| Mobile => Mobile.roomId
+let initialConfig = switch PlatformX.currentAdapter {
+| Mobile => Mobile.config->Some
 | _ => None
 }

@@ -8,3 +8,5 @@ let tap = (opt, fn) => {
     v
   })
 }
+
+let or = (a, b) => a->mapWithDefault(b, v => v->Some)

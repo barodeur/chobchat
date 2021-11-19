@@ -51,7 +51,7 @@ module Message = {
 
 @react.component
 let make = () => {
-  let roomId = Recoil.useRecoilValue(State.mainRoomId)
+  let roomId = Recoil.useRecoilValue(State.roomId)
   let events =
     roomId
     ->Result.map(id => Recoil.useRecoilValue(State.roomEventsState(id)))

@@ -1,5 +1,5 @@
 type errItem =
-  | MissingConfig(string)
+  | MissingConfig
   | MatrixError(Matrix.err)
   | DeviceError(Device.err)
   | StorageError(CrossSecureStore.err)
@@ -10,22 +10,21 @@ let mergeResultErrors2 = (resA, resB) =>
   ->Belt.Array.concatMany
   ->Result.error
 
-let homeserverUrl = Recoil.selector({
-  key: "Config.homeserverUrl",
-  get: _ =>
-    Config.homeserverUrl->Belt.Option.mapWithDefault(
-      Error([MissingConfig("homerserverUrl")]),
-      url => Ok(url),
-    ),
-})
-let mainRoomId = Recoil.selector({
-  key: "Config.roomId",
-  get: _ =>
-    Config.roomId->Belt.Option.mapWithDefault(Error([MissingConfig("roomId")]), url => Ok(url)),
-})
+let createConfigValue = (key, configSelector) =>
+  Recoil.selector({
+    key: key,
+    get: ({get}) =>
+      get(Config.recoilAtom)->Option.mapWithDefault(Error([MissingConfig]), config =>
+        config->configSelector->Ok
+      ),
+  })
+
+let homeserverUrl = createConfigValue("Config/homeserverUrl", config => config.homeserverUrl)
+let roomId = createConfigValue("Config/roomId", config => config.roomId)
+
 let guestMatrixClient = Recoil.selector({
   key: "MatixClient/Guest",
-  get: ({get}) => get(homeserverUrl)->Belt.Result.map(Matrix.createClient(_)),
+  get: ({get}) => get(homeserverUrl)->Result.map(Matrix.createClient(_)),
 })
 let flows = Recoil.asyncSelector({
   key: "Flows",
@@ -116,7 +115,7 @@ let roomEventsState: Recoil.atomFamily<
 let syncObservable = Recoil.selector({
   key: "SyncSubject",
   get: ({get}) =>
-    switch (get(matrixClient), get(mainRoomId)) {
+    switch (get(matrixClient), get(roomId)) {
     | (Ok(Some(client)), Ok(roomId)) =>
       client
       ->Matrix.createSyncObservable(
@@ -150,7 +149,7 @@ let useSync = roomId => {
       }),
     )
     ->Result.getWithDefault(None)
-  }, (obs, setRoomEvents, mainRoomId))
+  }, (obs, setRoomEvents, roomId))
 
   obs->Result.map(_ => ())
 }
