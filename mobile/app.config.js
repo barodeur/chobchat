@@ -19,7 +19,8 @@ export default {
   ],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "fr.chobert.chobchat"
+    bundleIdentifier: "fr.chobert.chobchat",
+    buildNumber: "2"
   },
   android: {
     adaptiveIcon: {
