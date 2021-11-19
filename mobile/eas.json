@@ -1,4 +1,7 @@
 {
+  "build": {
+    "production": {}
+  },
   "submit": {
     "production": {
       "ios": {
