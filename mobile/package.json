@@ -62,6 +62,7 @@
     "@babel/core": "^7.12.9",
     "@expo/next-adapter": "^3.1.6",
     "@rescript/react": "^0.10.3",
+    "eas-cli": "^0.37.0",
     "expo-cli": "^4.13.0",
     "jest": "^27.3.1",
     "rescript": "^9.1.4"
