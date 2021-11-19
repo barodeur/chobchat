@@ -12682,8 +12682,9 @@ rescript-react-native@^0.64.3:
   resolved "https://registry.yarnpkg.com/rescript-react-native/-/rescript-react-native-0.64.3.tgz#8fd11a2681cfdd65c02f0ff620186e5adf0c6854"
   integrity sha512-PjGDkV3RYiCTk4hCZyaKtZJV69By0AmJuzWyuHZONdeCB0q3DwjVJtA73gu6+jBrdl0OWon6UdXaVRXhhR47cQ==
 
-"rescript-recoil@file:../rescript-recoil":
-  version "2.1.1"
+"rescript-recoil@git+https://github.com/bloodyowl/rescript-recoil.git#fe72b7b9a965bbbbd1ad22fa3ed15719a723cdd5":
+  version "3.0.0"
+  resolved "git+https://github.com/bloodyowl/rescript-recoil.git#fe72b7b9a965bbbbd1ad22fa3ed15719a723cdd5"
 
 rescript-relay@^0.21.1:
   version "0.21.1"

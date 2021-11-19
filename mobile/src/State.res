@@ -10,15 +10,19 @@ let mergeResultErrors2 = (resA, resB) =>
   ->Belt.Array.concatMany
   ->Result.error
 
-let homeserverUrl = Recoil.constSelector(
-  Config.homeserverUrl->Belt.Option.mapWithDefault(
-    Error([MissingConfig("homerserverUrl")]),
-    url => Ok(url),
-  ),
-)
-let mainRoomId = Recoil.constSelector(
-  Config.roomId->Belt.Option.mapWithDefault(Error([MissingConfig("roomId")]), url => Ok(url)),
-)
+let homeserverUrl = Recoil.selector({
+  key: "Config.homeserverUrl",
+  get: _ =>
+    Config.homeserverUrl->Belt.Option.mapWithDefault(
+      Error([MissingConfig("homerserverUrl")]),
+      url => Ok(url),
+    ),
+})
+let mainRoomId = Recoil.selector({
+  key: "Config.roomId",
+  get: _ =>
+    Config.roomId->Belt.Option.mapWithDefault(Error([MissingConfig("roomId")]), url => Ok(url)),
+})
 let guestMatrixClient = Recoil.selector({
   key: "MatixClient/Guest",
   get: ({get}) => get(homeserverUrl)->Belt.Result.map(Matrix.createClient(_)),
@@ -112,11 +116,19 @@ let roomEventsState: Recoil.atomFamily<
 let syncObservable = Recoil.selector({
   key: "SyncSubject",
   get: ({get}) =>
-    get(matrixClient)->Result.map(res =>
-      res->Option.map(client =>
-        client->Matrix.createSyncObservable->Rx.Observable.pipe(Rx.Operator.share())
+    switch (get(matrixClient), get(mainRoomId)) {
+    | (Ok(Some(client)), Ok(roomId)) =>
+      client
+      ->Matrix.createSyncObservable(
+        ~filter=Matrix.Filter.t(~room=Matrix.Filter.roomFilter(~rooms=[roomId], ()), ()),
+        (),
       )
-    ),
+      ->Rx.Observable.pipe(Rx.Operator.share())
+      ->Some
+      ->Ok
+    | (Ok(None), _) => None->Ok
+    | (matrixClientRes, mainRoomIdRes) => mergeResultErrors2(matrixClientRes, mainRoomIdRes)
+    },
 })
 
 let useSync = roomId => {
