@@ -1,13 +1,14 @@
 {
   "scripts": {
-    "start": "expo start --dev-client",
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "web": "expo start --web",
+    "build": "yarn re:build && yarn next build",
+    "eas-build-post-install": "yarn re:build",
     "eject": "expo eject",
+    "ios": "react-native run-ios",
     "re:build": "rescript",
     "re:start": "rescript build -w",
-    "build": "yarn re:build && yarn next build"
+    "start": "expo start --dev-client",
+    "web": "expo start --web"
   },
   "dependencies": {
     "@emotion/native": "^11.0.0",
