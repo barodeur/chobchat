@@ -50,7 +50,7 @@ export default {
   ios: {
     supportsTablet: true,
     bundleIdentifier: "fr.chobert.chobchat",
-    buildNumber: "2"
+    buildNumber: "3"
   },
   android: {
     adaptiveIcon: {
