@@ -53,11 +53,13 @@ export default {
     buildNumber: "3"
   },
   android: {
-    adaptiveIcon: {
-      foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#FFFFFF"
-    },
-    package: "fr.chobert.chobchat"
+    package: "fr.chobert.chobchat",
+    softwareKeyboardLayoutMode: "resize"
+  },
+  androidStatusBar: {
+    translucent: true,
+    backgroundColor: "#00000000",
+    hidden: true
   },
   web: {
     favicon: "./assets/favicon.png"
