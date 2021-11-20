@@ -8,12 +8,12 @@ module Mobile = {
   @module("expo-standard-web-crypto") @val external crypto: webcrypto = "default"
 }
 
-let getRandomValues = switch PlatformX.currentAdapter {
-| Web =>
+let getRandomValues = switch PlatformX.platform {
+| Web(_) =>
   (. array) => {
     Web.crypto.getRandomValues(. array)
   }
-| Mobile => (. array) => Mobile.crypto.getRandomValues(. array)
+| Mobile(_) => (. array) => Mobile.crypto.getRandomValues(. array)
 | _ => (. _) => ()
 }
 

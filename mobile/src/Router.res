@@ -1,7 +1,7 @@
 type router = NextRouter(Next.Router.t) | Other
 
-let useRouter = switch PlatformX.currentAdapter {
-| Web =>
+let useRouter = switch PlatformX.platform {
+| Web(_) =>
   () => {
     let router = Next.Router.useRouter()
     NextRouter(router)

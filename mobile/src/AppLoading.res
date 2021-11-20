@@ -13,6 +13,6 @@ module Web = {
 
 @react.component
 let make = () =>
-  switch PlatformX.currentAdapter {
+  switch PlatformX.platform {
   | _ => <Web />
   }

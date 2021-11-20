@@ -1,17 +1,18 @@
-type adapter =
-  | Web
-  | Server
-  | Mobile
+type web = Server | Browser
+type mobile = Android | Ios
+type t =
+  | Web(web)
+  | Mobile(mobile)
   | Unknown
 
-let currentAdapter = switch ReactNative.Platform.os {
-| os if os === ReactNative.Platform.ios => Mobile
-| os if os === ReactNative.Platform.android => Mobile
+let platform = switch ReactNative.Platform.os {
+| os if os === ReactNative.Platform.ios => Mobile(Ios)
+| os if os === ReactNative.Platform.android => Mobile(Android)
 | os if os === ReactNative.Platform.web =>
   if %raw(`typeof window === "undefined"`) {
-    Server
+    Web(Server)
   } else {
-    Web
+    Web(Browser)
   }
 | _ => Unknown
 }

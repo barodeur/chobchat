@@ -21,15 +21,15 @@ module Web = {
 type err = Exn(exn) | MissingLocalStorage | Unknown
 
 let getItem = {
-  switch PlatformX.currentAdapter {
-  | Web =>
+  switch PlatformX.platform {
+  | Web(_) =>
     key =>
       Web.localStorage
       ->Belt.Option.map(storage => storage->Web.getItem(key)->Js.Null.toOption)
       ->Belt.Option.mapWithDefault(Ok(None), Result.ok)
       ->Promise.resolve
       ->PResult.mapError(err => Exn(err))
-  | Mobile =>
+  | Mobile(_) =>
     key =>
       Mobile.getItem(. key)
       ->PResult.result
@@ -40,14 +40,14 @@ let getItem = {
 }
 
 let setItem = {
-  switch PlatformX.currentAdapter {
-  | Web =>
+  switch PlatformX.platform {
+  | Web(_) =>
     (key, value) =>
       Web.localStorage
       ->Belt.Option.mapWithDefault(Error(MissingLocalStorage), Result.ok)
       ->Result.map(Web.setItem(_, key, value))
       ->Promise.resolve
-  | Mobile => (key, value) => Mobile.setItem(. key, value)->Promise.thenResolve(Result.ok)
+  | Mobile(_) => (key, value) => Mobile.setItem(. key, value)->Promise.thenResolve(Result.ok)
   | _ => (_key, _value) => Promise.resolve(Ok())
   }
 }

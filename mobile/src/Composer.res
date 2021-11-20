@@ -64,8 +64,8 @@ let make = (~value, ~onValueChange, ~onSubmit, ~sending as _) => {
             (),
           ),
           {
-            switch PlatformX.currentAdapter {
-            | Web => {"outlineStyle": "none"}
+            switch PlatformX.platform {
+            | Web(_) => {"outlineStyle": "none"}
             | _ => Js.Obj.empty()
             }
           }->unsafeStyle,
