@@ -17,7 +17,7 @@ module Message = {
   let make = (~text: string, ~sender, ~variant) =>
     <View style={viewStyle(~paddingVertical=5.->dp, ~paddingHorizontal=10.->dp, ())}>
       {variant == Received
-        ? <TextX style={Style.textStyle(~color="#00000040", ())}> {sender->React.string} </TextX>
+        ? <TextX style={Style.textStyle(~color="#00000060", ())}> {sender->React.string} </TextX>
         : React.null}
       <View
         style={viewStyle(
