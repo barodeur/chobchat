@@ -128,6 +128,7 @@ let make = () => {
           edges=[#top] style={viewStyle(~paddingBottom=5.->dp, ())}>
           <TextX
             style={textStyle(
+              ~marginVertical=10.->Style.dp,
               ~color=Color.white,
               ~textAlign=#center,
               ~fontSize=24.,
