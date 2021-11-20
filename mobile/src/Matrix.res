@@ -182,6 +182,16 @@ module Login = {
 }
 
 module RoomEvent = {
+  module UnsignedData = {
+    type t = {age: option<Duration.t>}
+
+    let codec = Jzon.object1(
+      ({age}) => age,
+      age => {age: age}->Ok,
+      Jzon.field("age", Duration.codec)->Jzon.optional,
+    )
+  }
+
   module RoomMessage = {
     type t = Text({body: string}) | Emote({body: string})
 
@@ -217,10 +227,10 @@ module RoomEvent = {
     | RoomMessage(RoomMessage.t)
     | RoomName(RoomName.t)
 
-  type t = {id: string, sender: string, content: content}
+  type t = {id: string, sender: string, content: content, unsigned: UnsignedData.t}
 
-  let codec = Jzon.object4(
-    ({id, sender, content}) => (
+  let codec = Jzon.object5(
+    ({id, sender, content, unsigned}) => (
       id,
       sender,
       switch content {
@@ -231,8 +241,9 @@ module RoomEvent = {
       | RoomMessage(message) => message->Jzon.encodeWith(RoomMessage.codec)
       | RoomName(name) => name->Jzon.encodeWith(RoomName.codec)
       },
+      unsigned,
     ),
-    ((id, sender, type_, contentJson)) => {
+    ((id, sender, type_, contentJson, unsigned)) => {
       let contentRes = switch type_ {
       | "m.room.message" =>
         contentJson->Jzon.decodeWith(RoomMessage.codec)->Belt.Result.map(m => RoomMessage(m))
@@ -245,12 +256,14 @@ module RoomEvent = {
         id: id,
         sender: sender,
         content: content,
+        unsigned: unsigned,
       })
     },
     Jzon.field("event_id", Jzon.string),
     Jzon.field("sender", Jzon.string),
     Jzon.field("type", Jzon.string),
     Jzon.field("content", Jzon.json),
+    Jzon.field("unsigned", UnsignedData.codec),
   )
 }
 
