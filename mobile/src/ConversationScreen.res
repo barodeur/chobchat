@@ -126,7 +126,10 @@ let make = () => {
             {"ChobChat"->React.string}
           </TextX>
         </ReactNativeSafeAreaContext.SafeAreaView>
-        <KeyboardAvoidingView behavior=#padding style={viewStyle(~flex=1., ())}>
+        <KeyboardAvoidingView
+          behavior=#padding
+          enabled={PlatformX.platform == Mobile(Ios)}
+          style={viewStyle(~flex=1., ())}>
           {messages->Result.mapWithDefault(
             <TextX> {"Impossible de charger les messages"->React.string} </TextX>,
             messages =>

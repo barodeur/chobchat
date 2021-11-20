@@ -54,7 +54,7 @@
     "relay-config": "11.0.0",
     "relay-runtime": "11.0.0",
     "rescript-jzon": "^1.3.0",
-    "rescript-react-native": "^0.64.3",
+    "rescript-react-native": "git+https://github.com/barodeur/rescript-react-native.git#548787fb3012423d11b78a90dba709446547f071",
     "rescript-recoil": "git+https://github.com/bloodyowl/rescript-recoil.git#fe72b7b9a965bbbbd1ad22fa3ed15719a723cdd5",
     "rescript-relay": "^0.21.1",
     "rxjs": "^7.4.0"
