@@ -49,6 +49,11 @@ module Message = {
 
 @val external setTimeout: (unit => unit, int) => float = "setTimeout"
 
+let inverted = switch PlatformX.platform {
+| Mobile(_) => true
+| _ => false
+}
+
 @react.component
 let make = () => {
   let roomId = Recoil.useRecoilValue(State.roomId)
@@ -68,7 +73,8 @@ let make = () => {
     ->Result.flatMap(userIdOpt =>
       userIdOpt->Option.mapWithDefault(Error(AuthError(NotAuthenticated)), userId => {
         events->Result.map(opt =>
-          opt->Belt.Array.keepMap(event =>
+          opt
+          ->Belt.Array.keepMap(event =>
             switch event.content {
             | RoomMessage(Text(message)) =>
               Some({
@@ -79,6 +85,7 @@ let make = () => {
             | _ => None
             }
           )
+          ->(inverted ? Belt.Array.reverse : arr => arr)
         )
       })
     )
@@ -140,6 +147,7 @@ let make = () => {
                 data=messages
                 renderItem={({item: {variant, body}}) => <Message variant text=body />}
                 keyExtractor={({id}, _) => id}
+                inverted
               />,
           )}
           <Composer
