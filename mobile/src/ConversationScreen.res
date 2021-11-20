@@ -8,23 +8,29 @@ type message = {
   body: string,
   sender: string,
   variant: variant,
+  age: Duration.t,
 }
 
 type err = AuthError(Authentication.err) | StateError(State.err)
 
 module Message = {
   @react.component
-  let make = (~text: string, ~sender, ~variant) =>
-    <View style={viewStyle(~paddingVertical=5.->dp, ~paddingHorizontal=10.->dp, ())}>
+  let make = (~text, ~sender, ~variant, ~age) =>
+    <View
+      style={viewStyle(
+        ~paddingVertical=8.->dp,
+        ~paddingHorizontal=10.->dp,
+        ~alignItems=switch variant {
+        | Sent => #flexEnd
+        | Received => #flexStart
+        },
+        (),
+      )}>
       {variant == Received
         ? <TextX style={Style.textStyle(~color="#00000040", ())}> {sender->React.string} </TextX>
         : React.null}
       <View
         style={viewStyle(
-          ~alignSelf=switch variant {
-          | Sent => #flexEnd
-          | Received => #flexStart
-          },
           ~borderRadius=10.,
           ~paddingVertical=10.->dp,
           ~paddingHorizontal=18.->dp,
@@ -47,6 +53,10 @@ module Message = {
           {React.string(text)}
         </TextX>
       </View>
+      <Duration
+        duration=age
+        style={Style.textStyle(~color="#00000060", ~fontSize=12., ~marginTop=2.->Style.dp, ())}
+      />
     </View>
 }
 
@@ -77,14 +87,15 @@ let make = () => {
       userIdOpt->Option.mapWithDefault(Error(AuthError(NotAuthenticated)), userId => {
         events->Result.map(opt =>
           opt
-          ->Belt.Array.keepMap(event =>
-            switch event.content {
-            | RoomMessage(Text(message)) =>
+          ->Belt.Array.keepMap(({id, sender, content, unsigned: {age}}) =>
+            switch (content, age) {
+            | (RoomMessage(Text({body})), Some(age)) =>
               Some({
-                variant: event.sender == userId ? Sent : Received,
-                id: event.id,
-                body: message.body,
-                sender: event.sender,
+                variant: sender == userId ? Sent : Received,
+                id: id,
+                body: body,
+                sender: sender,
+                age: age,
               })
             | _ => None
             }
@@ -150,8 +161,8 @@ let make = () => {
                 style={viewStyle(~flex=1., ~backgroundColor=Colors.grey, ())}
                 contentContainerStyle={viewStyle(~paddingVertical=10.->dp, ())}
                 data=messages
-                renderItem={({item: {variant, body, sender}}) =>
-                  <Message variant sender text=body />}
+                renderItem={({item: {variant, body, sender, age}}) =>
+                  <Message variant sender text=body age />}
                 keyExtractor={({id}, _) => id}
                 inverted
               />,
