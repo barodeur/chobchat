@@ -100,6 +100,21 @@ let currentUserId = Recoil.asyncSelector({
           )
           ->Option.mapWithDefault(Promise.resolve(), p => p->Promise.thenResolve(_ => ()))
         )
+        ->Promise.then(res =>
+          switch res {
+          | Error(errors)
+            if errors
+            ->Js.Array2.filter(error =>
+              switch error {
+              | MatrixError(UnknownToken(_)) => true
+              | _ => false
+              }
+            )
+            ->Belt.Array.length > 0 =>
+            CrossSecureStore.removeItem("accessToken")->Promise.thenResolve(_ => Ok(None))
+          | _ => Promise.resolve(res)
+          }
+        )
       )
     )
     ->PResult.wrapPromise
