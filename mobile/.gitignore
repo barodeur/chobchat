@@ -78,6 +78,7 @@ __generated__
 .bsb.lock
 .merlin
 .env.local
+pc-api-*.json
 
 # @generated: @expo/next-adapter@3.1.6
 /.expo/*
