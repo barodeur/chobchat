@@ -6,6 +6,7 @@ type variant = Sent | Received
 type message = {
   id: string,
   body: string,
+  sender: string,
   variant: variant,
 }
 
@@ -13,8 +14,11 @@ type err = AuthError(Authentication.err) | StateError(State.err)
 
 module Message = {
   @react.component
-  let make = (~text: string, ~variant: variant) =>
+  let make = (~text: string, ~sender, ~variant) =>
     <View style={viewStyle(~paddingVertical=5.->dp, ~paddingHorizontal=10.->dp, ())}>
+      {variant == Received
+        ? <TextX style={Style.textStyle(~color="#00000040", ())}> {sender->React.string} </TextX>
+        : React.null}
       <View
         style={viewStyle(
           ~alignSelf=switch variant {
@@ -24,7 +28,6 @@ module Message = {
           ~borderRadius=10.,
           ~paddingVertical=10.->dp,
           ~paddingHorizontal=18.->dp,
-          ~marginLeft=10.->dp,
           ~backgroundColor=switch variant {
           | Sent => Colors.red
           | Received => j`#DEDEDE`
@@ -81,6 +84,7 @@ let make = () => {
                 variant: event.sender == userId ? Sent : Received,
                 id: event.id,
                 body: message.body,
+                sender: event.sender,
               })
             | _ => None
             }
@@ -145,7 +149,8 @@ let make = () => {
                 style={viewStyle(~flex=1., ~backgroundColor=Colors.grey, ())}
                 contentContainerStyle={viewStyle(~paddingVertical=10.->dp, ())}
                 data=messages
-                renderItem={({item: {variant, body}}) => <Message variant text=body />}
+                renderItem={({item: {variant, body, sender}}) =>
+                  <Message variant sender text=body />}
                 keyExtractor={({id}, _) => id}
                 inverted
               />,
