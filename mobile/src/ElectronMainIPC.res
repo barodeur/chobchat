@@ -1,0 +1,1 @@
+include Electron__Main.MakeIPC(Electron__Message)

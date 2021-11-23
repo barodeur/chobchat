@@ -1,12 +1,19 @@
-// module Mobile = {
+type url = string
+
 @module("expo-linking") external openURL: string => unit = "openURL"
 @module("expo-linking") external createURL: (. string) => string = "createURL"
-@module("expo-linking") @return(nullable) external useURL: unit => option<string> = "useURL"
+@return(nullable) @module("expo-linking") external useURL: unit => option<string> = "useURL"
+
+type parseResponse = {
+  path: string,
+  queryParams: Js.Dict.t<string>,
+}
+@module("expo-linking") external parse: url => parseResponse = "parse"
 
 module URL = {
-  type t
+  type t = url
 
   @module("expo-linking") external parse: string => t = "parse"
-  @get external queryParams: t => Js.Json.t = "queryParams"
+  @get external queryParams: t => Js.Dict.t<string> = "queryParams"
   @get external path: t => string = "path"
 }

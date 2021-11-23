@@ -1,0 +1,13 @@
+appId: "fr.chobert.chobchat"
+productName: "ChobChat"
+linux:
+  executableName: "chobchat"
+  target:
+    - target: deb
+      arch:
+        - arm64
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
