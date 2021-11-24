@@ -82,24 +82,5 @@
   "repository": {
     "type": "git",
     "url": "github:barodeur/chobchat"
-  },
-  "build": {
-    "extraMetadata": {
-      "main": "main.js"
-    },
-    "files": [
-      {
-        "from": "dist/main/",
-        "to": "./",
-        "filter": ["**/*"]
-      },
-      {
-        "from": "dist/renderer",
-        "to": "./",
-        "filter": ["**/*"]
-      },
-      "package.json",
-      "**/node_modules/**/*"
-    ]
   }
 }
