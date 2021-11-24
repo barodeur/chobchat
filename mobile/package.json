@@ -74,7 +74,7 @@
   },
   "private": true,
   "name": "chobchat",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Paul Chobert <paul@chobert.fr>",
   "description": "Just a chat app for the chobert family",
   "homepage": "https://chobchat.chobert.fr",
