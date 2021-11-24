@@ -27,7 +27,7 @@ let fetch = (client, ~method_=?, ~body=?, path) =>
       ~method_?,
       ~body?,
       ~headers=Fetch.HeadersInit.makeWithDict(
-        []
+        [("Accept", "application/json"), ("Content-Type", "application/json")]
         ->Js.Array2.concat(
           client.accessToken->Belt.Option.mapWithDefault([], token => [
             ("Authorization", `Bearer ${token}`),

@@ -5,17 +5,19 @@ const withImages = require("next-images");
 
 const withTM = require("next-transpile-modules")(["react-native-web", "rescript-react-native"]);
 
-module.exports = withExpo(
-  withTM(
-    withFonts(
-      withImages(
-        withFonts({
-          projectRoom: __dirname,
-          images: {
-            disableStaticImages: true
-          }
-        })
-      )
-    )
-  )
+const config = withPlugins(
+  [
+    [withTM],
+    [withExpo],
+    [withFonts],
+    [withImages],
+  ],
+  {
+    projectRoot: __dirname,
+    images: {
+      disableStaticImages: true
+    },
+  }
 )
+
+module.exports = config;

@@ -33,7 +33,7 @@ export { config };
 export default {
   name: "ChobChat",
   slug: "chobchat",
-  scheme: "chobchat",
+  scheme: config.scheme,
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",

@@ -1,5 +1,5 @@
+module LinkingX = Linking
 open ReactNative
-// module Text = TextX
 
 type err = NotAuthenticated
 
@@ -20,8 +20,13 @@ module IdentityProviderButton = {
           )->Option.some,
           style,
         ]->Style.arrayOption}
-      onPress={_ => {
-        ExpoLinking.openURL(redirectUrl)
+      onPress={e => {
+        e->ReactNative.Event.PressEvent.preventDefault
+        switch PlatformX.platform {
+        | Web(Electron) => ElectronRendererIPC.sendSync(OpenExternal(redirectUrl))->ignore
+        | _ => ExpoLinking.openURL(redirectUrl)
+        }
+
         ()
       }}>
       {_ =>
@@ -54,24 +59,17 @@ module Flow = {
 }
 
 module Flows = {
-  let loginTokenCodec = Jzon.object1(
-    loginToken => loginToken,
-    loginToken => loginToken->Ok,
-    Jzon.field("loginToken", Jzon.string)->Jzon.optional,
-  )
-
-  let redirectUrl = ExpoLinking.createURL(. "/")
+  let redirectUrl = switch PlatformX.platform {
+  | Web(Electron) => "chobchat://"
+  | _ => ExpoLinking.createURL(. "/")
+  }
 
   @react.component
   let make = () => {
-    let url = ExpoLinking.useURL()
-    let queryParams =
-      url->Belt.Option.map(url => url->ExpoLinking.URL.parse->ExpoLinking.URL.queryParams)
+    let url = LinkingX.useURL()
     let router = Router.useRouter()
     let queryLoginToken =
-      queryParams->Belt.Option.flatMap(params =>
-        params->Jzon.decodeWith(loginTokenCodec)->Belt.Result.getWithDefault(None)
-      )
+      url->Option.flatMap(url => url->URL.make->URL.getSearchParam("loginToken"))
     let matrixClient = Recoil.useRecoilValue(State.guestMatrixClient)
     let flows = Recoil.useRecoilValue(State.flows)
     let setLoginTokenState = Recoil.useSetRecoilState(State.loginTokenState)

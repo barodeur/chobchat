@@ -61,9 +61,12 @@
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
+    "@expo/electron-adapter": "^0.0.55",
     "@expo/next-adapter": "^3.1.6",
     "@rescript/react": "^0.10.3",
     "eas-cli": "^0.37.0",
+    "electron": "^6.0.12",
+    "electron-builder": "^22.14.5",
     "expo-cli": "^4.13.0",
     "jest": "^27.3.1",
     "lodash": "^4.17.21",
@@ -71,5 +74,32 @@
   },
   "private": true,
   "name": "chobchat",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "author": "Paul Chobert <paul@chobert.fr>",
+  "description": "Just a chat app for the chobert family",
+  "homepage": "https://chobchat.chobert.fr",
+  "licence": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "github:barodeur/chobchat"
+  },
+  "build": {
+    "extraMetadata": {
+      "main": "main.js"
+    },
+    "files": [
+      {
+        "from": "dist/main/",
+        "to": "./",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "dist/renderer",
+        "to": "./",
+        "filter": ["**/*"]
+      },
+      "package.json",
+      "**/node_modules/**/*"
+    ]
+  }
 }
