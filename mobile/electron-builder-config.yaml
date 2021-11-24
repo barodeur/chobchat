@@ -1,4 +1,14 @@
 appId: "fr.chobert.chobchat"
+extraMetadata:
+  main: "main.js"
+files:
+  - from: "dist/main/"
+    to: "./"
+    filter: ["**/*"]
+  - from: "dist/renderer/"
+    to: "./"
+    filter: ["**/*"]
+  - package.json
 productName: "ChobChat"
 linux:
   executableName: "chobchat"
