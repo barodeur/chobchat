@@ -53,10 +53,7 @@ let makeMainWindow = () => {
 }
 
 app->App.on("window-all-closed", () => {
-  switch platform->Js.Undefined.toOption {
-  | Some("darwin") => app->App.quit
-  | _ => ()
-  }
+  app->App.quit
 })
 
 app->App.on("activate", () => {
