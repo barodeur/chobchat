@@ -1,1 +1,1 @@
-include Electron__Main.MakeIPC(Electron__Message)
+include Electron__Main.MakeIPC(ElectronIPCMessage)

@@ -24,6 +24,20 @@ module App = {
 
   @send external onOpenUrl_: (app, @as("open-url") _, (event, string) => unit) => unit = "on"
   let onOpenUrl = handler => app->onOpenUrl_(handler)
+
+  @send
+  external onSecondInstance_: (
+    app,
+    @as("second-instance") _,
+    (event, array<string>) => unit,
+  ) => unit = "on"
+  let onSecondInstance = handler => app->onSecondInstance_(handler)
+
+  @send external requestSingleInstanceLock_: app => bool = "requestSingleInstanceLock"
+  let requestSingleInstanceLock = () => app->requestSingleInstanceLock_
+
+  @send external exit_: app => unit = "exit"
+  let exit = () => app->exit_
 }
 
 module WebContents = {

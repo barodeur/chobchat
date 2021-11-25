@@ -3,14 +3,26 @@ open Electron__Main
 @val @scope(("process", "env")) external nodeEnv: Js.Undefined.t<string> = "NODE_ENV"
 @val @scope(("process", "env"))
 external electronWebpackWDSPort: Js.Undefined.t<string> = "ELECTRON_WEBPACK_WDS_PORT"
-@val @scope("process") external platform: Js.Undefined.t<string> = "platform"
+@val @scope("process") external platform: string = "platform"
 
-let boolRes = App.setAsDefaultProtocolClient("chobchat")
+let protocol = "chobchat"
+
+let boolRes = App.setAsDefaultProtocolClient(protocol)
 
 let isDevelopment =
   nodeEnv->Js.Undefined.toOption->Option.mapWithDefault(false, env => env != "production")
 
 let mainWindow = ref(None)
+
+let baseUrl = switch (
+  isDevelopment,
+  electronWebpackWDSPort->Js.Undefined.toOption,
+  %external(__dirname),
+) {
+| (true, Some(port), _) => Some(`http://localhost:${port}`)
+| (false, _, Some(dirname)) => Some(`file://${Node.Path.join([dirname, "index.html"])}`)
+| _ => None
+}
 
 let makeMainWindow = () => {
   let window = BrowserWindow.make(
@@ -27,15 +39,7 @@ let makeMainWindow = () => {
     window->BrowserWindow.webContents->WebContents.openDevTools
   }
 
-  if isDevelopment {
-    electronWebpackWDSPort
-    ->Js.Undefined.toOption
-    ->Option.mapWithDefault((), v => window->BrowserWindow.loadURL(`http://localhost:${v}`))
-  } else {
-    %external(__dirname)->Option.mapWithDefault((), dirname => {
-      window->BrowserWindow.loadURL(`file://${Node.Path.join([dirname, "index.html"])}`)
-    })
-  }
+  baseUrl->Option.map(url => window->BrowserWindow.loadURL(url))->ignore
 
   window
   ->BrowserWindow.webContents
@@ -75,11 +79,37 @@ ElectronMainIPC.onMessage((e, m) => {
   }
 })
 
-App.onOpenUrl((event, url) => {
-  event->Event.preventDefault
-  switch mainWindow.contents {
-  | Some(win) =>
-    win->BrowserWindow.webContents->ElectronMainIPC.WebContents.sendMessage(URLOpened(url))
+let isLocked = App.requestSingleInstanceLock()
+if !isLocked {
+  App.exit()
+}
+
+let processUrl = url => {
+  switch (mainWindow.contents, baseUrl) {
+  | (Some(win), Some(baseURL)) =>
+    win->BrowserWindow.loadURL(
+      url->Js.String2.replaceByRe(Js.Re.fromString(`^${protocol}:[/]{0,2}`), baseURL),
+    )
   | _ => ()
   }
-})
+}
+
+switch platform {
+| "darwin" =>
+  App.onOpenUrl((event, url) => {
+    event->Event.preventDefault
+    processUrl(url)
+  })
+| "linux" =>
+  App.onSecondInstance((_, argv) => {
+    argv
+    ->Belt.Array.get(argv->Belt.Array.length - 1)
+    ->Option.map(url =>
+      if url->Js.String2.startsWith(`${protocol}:`) {
+        processUrl(url)
+      }
+    )
+    ->ignore
+  })
+| _ => ()
+}
