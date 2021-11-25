@@ -27,8 +27,8 @@ let baseUrl = switch (
 let makeMainWindow = () => {
   let window = BrowserWindow.make(
     BrowserWindow.config(
-      ~width=400,
-      ~height=800,
+      ~width=320,
+      ~height=568,
       ~contextIsolation=false,
       ~webPreferences=BrowserWindow.webPreferencesConfig(~nodeIntegration=true, ()),
       ~autoHideMenuBar=true,
