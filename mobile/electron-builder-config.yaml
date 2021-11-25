@@ -12,6 +12,7 @@ files:
 productName: "ChobChat"
 linux:
   executableName: "chobchat"
+  category: "Internet"
   target:
     - target: deb
       arch:
