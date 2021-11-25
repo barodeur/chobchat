@@ -58,6 +58,7 @@ module BrowserWindow = {
     @optional height: int,
     @optional contextIsolation: bool,
     @optional webPreferences: webPreferencesConfig,
+    @optional autoHideMenuBar: bool,
   }
   @new @module("./electron.electron") external make: config => t = "BrowserWindow"
   @get external webContents: browserWindow => webContents = "webContents"

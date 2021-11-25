@@ -31,6 +31,7 @@ let makeMainWindow = () => {
       ~height=800,
       ~contextIsolation=false,
       ~webPreferences=BrowserWindow.webPreferencesConfig(~nodeIntegration=true, ()),
+      ~autoHideMenuBar=true,
       (),
     ),
   )
