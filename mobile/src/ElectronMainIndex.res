@@ -88,6 +88,7 @@ let processUrl = url => {
     win->BrowserWindow.loadURL(
       url->Js.String2.replaceByRe(Js.Re.fromString(`^${protocol}:[/]{0,2}`), baseURL),
     )
+    win->BrowserWindow.focus
   | _ => ()
   }
 }
