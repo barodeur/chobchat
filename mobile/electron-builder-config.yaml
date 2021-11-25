@@ -20,6 +20,7 @@ linux:
   target:
     - target: appImage
       arch:
+        - x64
         - armv7l
 mac:
   target:
