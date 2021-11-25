@@ -13,6 +13,10 @@ productName: "ChobChat"
 linux:
   executableName: "chobchat"
   category: "Internet"
+  protocols:
+    - name: chobchat
+      schemes:
+        - chobchat
   target:
     - target: deb
       arch:
