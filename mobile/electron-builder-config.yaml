@@ -10,7 +10,6 @@ files:
     filter: ["**/*"]
   - package.json
 productName: "ChobChat"
-publish: never
 linux:
   executableName: "chobchat"
   category: "Internet"
