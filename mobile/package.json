@@ -8,7 +8,9 @@
     "re:build": "rescript",
     "re:start": "rescript build -w",
     "start": "expo start --dev-client",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "electron:build": "electron-webpack",
+    "dist:linux": "electron-builder --config ./electron-builder-config.yaml -l"
   },
   "dependencies": {
     "@emotion/native": "^11.0.0",
