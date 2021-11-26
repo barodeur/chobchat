@@ -17,7 +17,7 @@ jobs:
         id: retrieve-version
         working-directory: ${{env.WORKING_DIRECTORY}}
         run: |
-          PKG_VERSION=$(jq -r .version src/package.json)
+          PKG_VERSION=$(jq -r .version package.json)
           echo "::set-output name=package_version::$PKG_VERSION"
   build-linux:
     runs-on: ubuntu-20.04
