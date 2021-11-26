@@ -47,7 +47,7 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Build Application
         working-directory: ${{env.WORKING_DIRECTORY}}
-        run: yarn electron:build && yarn dist:linux
+        run: yarn re:build && yarn electron:build && yarn dist:linux
       - name: Upload armhf AppImage
         uses: actions/upload-artifact@v2
         with:
