@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       WORKING_DIRECTORY: ./mobile
+    outputs:
+      package_version: ${{ steps.retrieve-version.outputs.package_version }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -21,6 +23,10 @@ jobs:
           echo "::set-output name=package_version::$PKG_VERSION"
   build-linux:
     runs-on: ubuntu-20.04
+    needs: setup
+    env:
+      WORKING_DIRECTORY: ./mobile
+      _PACKAGE_VERSION: ${{ needs.setup.outputs.package_version }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -36,17 +42,27 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
+      - name: Install node dependencies
+        working-directory: ${{env.WORKING_DIRECTORY}}
+        run: yarn install --frozen-lockfile
       - name: Build Application
+        working-directory: ${{env.WORKING_DIRECTORY}}
         run: yarn electron:build && yarn dist:linux
       - name: Upload armhf AppImage
         uses: actions/upload-artifact@v2
         with:
           name: ChobChat-${{ env._PACKAGE_VERSION }}-armv7l.AppImage
-          path: ./dist/ChobChat-${{ env._PACKAGE_VERSION }}-armv7l.AppImage
+          path: ./mobile/dist/ChobChat-${{ env._PACKAGE_VERSION }}-armv7l.AppImage
           if-no-files-found: error
       - name: Upload x64 AppImage
         uses: actions/upload-artifact@v2
         with:
           name: ChobChat-${{ env._PACKAGE_VERSION }}.AppImage
-          path: ./dist/ChobChat-${{ env._PACKAGE_VERSION }}-x86.AppImage
+          path: ./mobile.dist/ChobChat-${{ env._PACKAGE_VERSION }}-x86.AppImage
+          if-no-files-found: error
+      - name: Upload latest auto-update artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: latest-linux.yml
+          path: ./mobile/dist/latest-linux.yml
           if-no-files-found: error
