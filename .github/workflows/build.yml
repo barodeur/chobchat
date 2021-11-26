@@ -58,7 +58,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ChobChat-${{ env._PACKAGE_VERSION }}.AppImage
-          path: ./mobile.dist/ChobChat-${{ env._PACKAGE_VERSION }}-x86.AppImage
+          path: ./mobile/dist/ChobChat-${{ env._PACKAGE_VERSION }}-x86.AppImage
           if-no-files-found: error
       - name: Upload latest auto-update artifact
         uses: actions/upload-artifact@v2
