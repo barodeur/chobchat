@@ -6,6 +6,8 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-20.04
+    env:
+      WORKING_DIRECTORY: ./mobile
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -13,6 +15,7 @@ jobs:
           node-version: "14"
       - name: Get Package Version
         id: retrieve-version
+        working-directory: ${{env.WORKING_DIRECTORY}}
         run: |
           PKG_VERSION=$(jq -r .version src/package.json)
           echo "::set-output name=package_version::$PKG_VERSION"
