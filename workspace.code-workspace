@@ -3,6 +3,9 @@
     {
       "name": "Mobile",
       "path": "mobile"
+    },
+    {
+      "path": "./.github"
     }
   ],
   "settings": {
@@ -10,6 +13,9 @@
     "github.copilot.enable": {
       "*": true,
       "rescript": false
+    },
+    "yaml.schemas": {
+      "https://json.schemastore.org/github-workflow.json": ".github/workflows/*"
     }
-  }
+  },
 }
