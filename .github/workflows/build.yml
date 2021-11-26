@@ -1,8 +1,8 @@
 name: learn-github-actions
 on:
-  push:
+  pull_request:
     branches:
-      - electron-cd
+      - main
 jobs:
   setup:
     runs-on: ubuntu-20.04
