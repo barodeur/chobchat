@@ -34,10 +34,14 @@ let flows = Recoil.asyncSelector({
     | Error(_) as errorRes => Promise.resolve(errorRes)
     },
 })
+let sessionCounterState = Recoil.atom({key: "SessionCounterState", default: 0})
 let loginTokenState = Recoil.atom({key: "LoginToken", default: None})
 let accessTokenFromStorage = Recoil.asyncSelector({
   key: "AccessToken/FromStorage",
-  get: _ => CrossSecureStore.getItem("accessToken")->PResult.mapError(err => [StorageError(err)]),
+  get: ({get}) => {
+    let _ = get(sessionCounterState)
+    CrossSecureStore.getItem("accessToken")->PResult.mapError(err => [StorageError(err)])
+  },
 })
 let accessTokenFromLoginToken = Recoil.asyncSelector({
   key: "AccessToken/FromLoginToken",

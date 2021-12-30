@@ -60,8 +60,6 @@ module Message = {
     </View>
 }
 
-@val external setTimeout: (unit => unit, int) => float = "setTimeout"
-
 let inverted = switch PlatformX.platform {
 | Mobile(_) => true
 | _ => false
@@ -109,7 +107,7 @@ let make = () => {
   React.useEffect1(() => {
     switch listRef.current->Js.Nullable.toOption {
     | None => ()
-    | Some(ref) => setTimeout(() => {
+    | Some(ref) => Timeout.set(() => {
         ref->FlatList.scrollToEnd
         ()
       }, 100)->ignore
@@ -131,14 +129,32 @@ let make = () => {
     ()
   }, (text, matrixClient))
 
+  let (_, setSessionCounter) = Recoil.useRecoilState(State.sessionCounterState)
+  let (_, setLoginToken) = Recoil.useRecoilState(State.loginTokenState)
+
+  let handleLogoutPress = React.useCallback2(_ => {
+    if Confirm.confirm(`Es-tu sûr ?`) {
+      CrossSecureStore.removeItem("accessToken")
+      ->Promise.thenResolve(res => {
+        if res->Result.isOk {
+          setLoginToken(_ => None)
+          setSessionCounter(v => v + 1)
+        }
+      })
+      ->ignore
+    }
+  }, (setLoginToken, setSessionCounter))
+
   syncRes->Result.mapWithDefault(
     <Text> {"Impossible de synchroniser les messages"->React.string} </Text>,
     _ =>
       <View style={viewStyle(~flex=1., ~backgroundColor=Colors.green, ())}>
         <ReactNativeSafeAreaContext.SafeAreaView
-          edges=[#top] style={viewStyle(~paddingBottom=5.->dp, ())}>
+          edges=[#top] style={viewStyle(~paddingBottom=5.->dp, ~flexDirection=#row, ())}>
+          <View style={viewStyle(~flex=1., ())} />
           <TextX
             style={textStyle(
+              ~flex=1.,
               ~marginVertical=10.->Style.dp,
               ~color=Color.white,
               ~textAlign=#center,
@@ -148,6 +164,18 @@ let make = () => {
             )}>
             {"ChobChat"->React.string}
           </TextX>
+          <View
+            style={viewStyle(
+              ~flex=1.,
+              ~alignItems=#flexEnd,
+              ~justifyContent=#center,
+              ~paddingRight=10.->Style.dp,
+              (),
+            )}>
+            <TouchableOpacity onPress={handleLogoutPress}>
+              <TextX style={textStyle()}> {"Logout"->React.string} </TextX>
+            </TouchableOpacity>
+          </View>
         </ReactNativeSafeAreaContext.SafeAreaView>
         <KeyboardAvoidingView
           behavior=#padding
