@@ -133,7 +133,7 @@ let make = () => {
   let (_, setLoginToken) = Recoil.useRecoilState(State.loginTokenState)
 
   let handleLogoutPress = React.useCallback2(_ => {
-    if Confirm.confirm(`Es-tu sûr ?`) {
+    Confirm.confirm(`Es-tu sûr ?`, () => {
       CrossSecureStore.removeItem("accessToken")
       ->Promise.thenResolve(res => {
         if res->Result.isOk {
@@ -142,7 +142,7 @@ let make = () => {
         }
       })
       ->ignore
-    }
+    })
   }, (setLoginToken, setSessionCounter))
 
   syncRes->Result.mapWithDefault(
