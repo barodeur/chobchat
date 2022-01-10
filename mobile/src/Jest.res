@@ -3,17 +3,16 @@
 
 type result = {
   pass: bool,
-  message: () => string,
+  message: unit => string,
 }
-@scope("expect") @val external extendExpect0: Js.Dict.t<() => result> => unit = "extend"
+@scope("expect") @val external extendExpect0: Js.Dict.t<unit => result> => unit = "extend"
 
 let init = () => {
-  extendExpect0(Js.Dict.fromArray([("toHaveSome", () => ({ pass: true, message: () => "" }))]))
+  extendExpect0(Js.Dict.fromArray([("toHaveSome", () => {pass: true, message: () => ""})]))
 }
 
 type e<'a>
 @val external expect: 'a => e<'a> = "expect"
 @send external toBe: (e<'a>, 'a) => unit = "toBe"
 @send external toEqual: (e<'a>, 'a) => unit = "toEqual"
-@send external toHaveSome: (e<option<'a>>) => unit = "toHaveSome"
-
+@send external toHaveSome: e<option<'a>> => unit = "toHaveSome"

@@ -1,3 +1,4 @@
 {
   "jest.jestCommandLine": "yarn jest",
+  "jest.autoRun": { "watch": true, "onStartup": ["all-tests"] }
 }
