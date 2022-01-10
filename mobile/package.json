@@ -13,13 +13,10 @@
     "dist:linux": "electron-builder --config ./electron-builder-config.yaml -l -p never"
   },
   "dependencies": {
-    "@emotion/native": "^11.0.0",
-    "@emotion/react": "^11.4.1",
     "@react-native-async-storage/async-storage": "~1.15.0",
     "@react-spring/native": "^9.3.0",
     "@react-spring/web": "^9.3.0",
     "@ryyppy/rescript-promise": "^2.1.0",
-    "bs-css-emotion": "^4.0.1",
     "bs-fetch": "^0.6.2",
     "dotenv": "^10.0.0",
     "expo": "^44.0.0",
@@ -33,8 +30,6 @@
     "expo-standard-web-crypto": "^1.1.1",
     "expo-status-bar": "~1.2.0",
     "expo-updates": "~0.11.3",
-    "graphql": "^15.5.3",
-    "matrix-js-sdk": "^15.0.0",
     "next": "^12.0.1",
     "next-compose-plugins": "^2.2.1",
     "next-fonts": "^1.5.1",
