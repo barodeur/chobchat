@@ -11,7 +11,66 @@ type message = {
   age: Duration.t,
 }
 
-type err = AuthError(Authentication.err) | StateError(State.err)
+type err = AuthError(Authentication.err) | NotAuthenticated
+
+let roomEventsState = Jotai.Atom.Family.make(_ => Jotai.Atom.make([]), String.equal)
+// let roomEventsState = Jotai.Atom.make([])
+let syncObservable = Jotai.Atom.makeDerived(getter =>
+  switch (
+    getter->Jotai.Atom.get(Authentication.matrixClient),
+    getter->Jotai.Atom.get(Authentication.roomId),
+  ) {
+  | (Ok(Some(client)), Ok(roomId)) =>
+    client
+    ->Matrix.createSyncAsyncIterator(
+      ~filter=Matrix.Filter.t(~room=Matrix.Filter.roomFilter(~rooms=[roomId], ()), ()),
+      (),
+    )
+    ->Some
+    ->Ok
+  | (Ok(None), _) => None->Ok
+  | (matrixClientRes, mainRoomIdRes) =>
+    StateUtils.mergeResultErrors2(matrixClientRes, mainRoomIdRes)
+  }
+)
+
+let useSync = roomId => {
+  let asyncIteratorRes = Jotai.React.useReadable(syncObservable)
+  let setRoomEvents = Jotai.React.useWritable(roomEventsState(roomId))
+  // let setRoomEvents = Jotai.React.useWritable(roomEventsState)
+
+  React.useEffect3(() => {
+    asyncIteratorRes
+    ->Result.map(
+      Option.flatMap(_, asyncIterator => {
+        let canceledRef = ref(false)
+        let rec loop = () =>
+          asyncIterator.next()
+          ->Promise.thenResolve(eventOpt =>
+            eventOpt->Option.mapWithDefault((), event => {
+              if !canceledRef.contents {
+                switch event {
+                | RoomEvent(rId, roomEvent) =>
+                  if roomId == rId {
+                    setRoomEvents(events => events->Belt.Array.concat([roomEvent]))
+                  }
+                }
+                loop()
+              }
+            })
+          )
+          ->ignore
+
+        loop()
+
+        Some(() => canceledRef.contents = true)
+      }),
+    )
+    ->Result.getWithDefault(None)
+  }, (asyncIteratorRes, setRoomEvents, roomId))
+
+  asyncIteratorRes->Result.map(_ => ())
+}
 
 module Message = {
   @react.component
@@ -67,22 +126,22 @@ let inverted = switch PlatformX.platform {
 
 @react.component
 let make = () => {
-  let roomId = Recoil.useRecoilValue(State.roomId)
+  let roomId = Jotai.React.useReadable(Authentication.roomId)
   let events =
     roomId
-    ->Result.map(id => Recoil.useRecoilValue(State.roomEventsState(id)))
-    ->Result.mapError(err => StateError(err))
-  let syncRes = roomId->Result.flatMap(id => State.useSync(id))
-  let currentUserId = Recoil.useRecoilValue(State.currentUserId)
-  let matrixClient = Recoil.useRecoilValue(State.matrixClient)
+    ->Result.map(id => Jotai.React.useReadable(roomEventsState(id)))
+    ->Result.mapError(err => AuthError(err))
+  let syncRes = roomId->Result.flatMap(id => useSync(id))
+  let currentUserId = Jotai.React.useReadable(Authentication.currentUserId)
+  let matrixClient = Jotai.React.useReadable(Authentication.matrixClient)
 
   let listRef = React.useRef(Js.Nullable.null)
 
   let messages = React.useMemo2(() => {
     currentUserId
-    ->Result.mapError(err => StateError(err))
+    ->Result.mapError(err => AuthError(err))
     ->Result.flatMap(userIdOpt =>
-      userIdOpt->Option.mapWithDefault(Error(AuthError(NotAuthenticated)), userId => {
+      userIdOpt->Option.mapWithDefault(Error(NotAuthenticated), userId => {
         events->Result.map(opt =>
           opt
           ->Belt.Array.keepMap(({id, sender, content, unsigned: {age}}) =>
@@ -129,8 +188,8 @@ let make = () => {
     ()
   }, (text, matrixClient))
 
-  let (_, setSessionCounter) = Recoil.useRecoilState(State.sessionCounterState)
-  let (_, setLoginToken) = Recoil.useRecoilState(State.loginTokenState)
+  let setSessionCounter = Jotai.React.useWritable(Authentication.sessionCounterState)
+  let setLoginToken = Jotai.React.useWritable(Authentication.loginTokenState)
 
   let handleLogoutPress = React.useCallback2(_ => {
     Confirm.confirm(`Es-tu sûr ?`, () => {

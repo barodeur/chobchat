@@ -380,33 +380,31 @@ module Sync = {
     )
 }
 
-// type action = Continue(option<string>) | Break
-let createSyncObservable = (client, ~filter=?, ()) => {
-  Rx.Observable.make(subscriber => {
-    let rec loop: option<string> => Promise.t<unit> = since => {
-      client
-      ->Sync.sync(~since?, ~filter?, ())
-      ->Promise.then(res => {
-        res->Belt.Result.mapWithDefault(Promise.resolve(), payload => {
-          payload.rooms->Belt.Option.mapWithDefault((), rooms =>
-            rooms.join
-            ->Js.Dict.entries
-            ->Belt.Array.map(((roomId, {timeline})) =>
-              timeline.events->Belt.Array.map(event => Event.RoomEvent(roomId, event))
-            )
-            ->Belt.Array.concatMany
-            ->Belt.Array.forEach(event => subscriber->Rx.Subscriber.next(event))
+let createSyncAsyncIterator = (client, ~filter=?, ()) => {
+  AsyncIterator.sequence()->AsyncIterator.scan((state, _) => {
+    let since = state.contents
+    client
+    ->Sync.sync(~since?, ~filter?, ())
+    ->Promise.then(res => {
+      res->Belt.Result.mapWithDefault(Promise.resolve([]), payload => {
+        state.contents = Some(payload.nextBatch)
+        payload.rooms
+        ->Option.mapWithDefault([], rooms =>
+          rooms.join
+          ->Js.Dict.entries
+          ->Js.Array2.reduce(
+            (events, (roomId, {timeline})) =>
+              Js.Array2.concat(
+                events,
+                timeline.events->Js.Array2.map(event => Event.RoomEvent(roomId, event)),
+              ),
+            [],
           )
-          loop(Some(payload.nextBatch))->ignore
-          Promise.resolve()
-        })
+        )
+        ->Promise.resolve
       })
-    }
-
-    loop(None)->ignore
-
-    None
-  })
+    })
+  }, None)->AsyncIterator.flatMap(AsyncIterator.fromArray)
 }
 
 let generateTransactionId = () => Crypto.generateRandomBase58(16)

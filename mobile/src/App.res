@@ -2,10 +2,12 @@ open ReactNative
 
 @react.component
 let make = (~config=?, ()) =>
-  <Recoil.RecoilRoot
-    initializeState={({set}) => Config.recoilAtom->set(config->Option.or(Config.initialConfig))}>
-    <StatusBar barStyle=#lightContent />
-    <ReactNativeSafeAreaContext.SafeAreaProvider>
+  <ReactNativeSafeAreaContext.SafeAreaProvider>
+    <Jotai.React.Provider
+      initialValues={Jotai.React.Provider.InitialValues.make1(
+        config->Belt.Option.mapWithDefault([], _ => [(Config.jotaiAtom, config)]),
+      )}>
+      <StatusBar barStyle=#lightContent />
       <AppLoader> <Authentication> <ConversationScreen /> </Authentication> </AppLoader>
-    </ReactNativeSafeAreaContext.SafeAreaProvider>
-  </Recoil.RecoilRoot>
+    </Jotai.React.Provider>
+  </ReactNativeSafeAreaContext.SafeAreaProvider>

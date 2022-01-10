@@ -14,10 +14,12 @@
   ],
   "suffix": ".bs.js",
   "reason": { "react-jsx": 3 },
+  "warnings": { "error": true },
   "bs-dependencies": [
     "@rescript/react",
     "@ryyppy/rescript-promise",
     "bs-fetch",
+    "re-async-iterator",
     "rescript-jzon",
     "rescript-react-native",
     "rescript-recoil"

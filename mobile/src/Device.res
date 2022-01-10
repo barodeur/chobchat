@@ -7,13 +7,11 @@ let generateId = () => {
   `dev_${randomPart}`
 }
 
-let deviceId = Recoil.asyncSelector({
-  key: "DeviceId/Persisted",
-  get: _ =>
-    CrossSecureStore.getItem("deviceId")
-    ->PResult.map(deviceIdOpt => deviceIdOpt->Belt.Option.getWithDefault(generateId()))
-    ->PResult.flatMap(deviceId =>
-      CrossSecureStore.setItem("deviceId", deviceId)->Promise.thenResolve(_ => Ok(deviceId))
-    )
-    ->PResult.mapError(err => StorageError(err)),
-})
+let deviceId = Jotai.Atom.makeAsyncDerived(_ =>
+  CrossSecureStore.getItem("deviceId")
+  ->PResult.map(deviceIdOpt => deviceIdOpt->Belt.Option.getWithDefault(generateId()))
+  ->PResult.flatMap(deviceId =>
+    CrossSecureStore.setItem("deviceId", deviceId)->Promise.thenResolve(_ => Ok(deviceId))
+  )
+  ->PResult.mapError(err => StorageError(err))
+)

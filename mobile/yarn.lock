@@ -8183,40 +8183,6 @@ expo-constants@~13.0.0:
     "@expo/config" "^6.0.6"
     uuid "^3.3.2"
 
-expo-dev-client@~0.7.2:
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/expo-dev-client/-/expo-dev-client-0.7.2.tgz#af441e30910d1337f1629a566e8399836e741fe3"
-  integrity sha512-uYOdo7NNK52BdwbJac+mn9JEPp7e+SrZqPZndIUzpTq/2+f5H4H4IQKUuodqD7FdplNFt5ECBARQO3Lfi7qttQ==
-  dependencies:
-    "@expo/config-plugins" "^4.0.2"
-    expo-dev-launcher "0.9.1"
-    expo-dev-menu "0.8.6"
-    expo-dev-menu-interface "0.4.2"
-    expo-manifests "~0.2.2"
-    expo-updates-interface "~0.5.0"
-
-expo-dev-launcher@0.9.1:
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/expo-dev-launcher/-/expo-dev-launcher-0.9.1.tgz#35b4ece8a0230d9953a48a7d39ecd57d44761e8e"
-  integrity sha512-KN01F5+oID2P4alI5AUddn3HoUn8YFj/wl4EXw2Bt240ikVfLH3I8YSOzD9smRF5M7sMI1/icpIUp7Zct+cmUw==
-  dependencies:
-    "@expo/config-plugins" "^4.0.2"
-    resolve-from "^5.0.0"
-    semver "^7.3.5"
-
-expo-dev-menu-interface@0.4.2:
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/expo-dev-menu-interface/-/expo-dev-menu-interface-0.4.2.tgz#061cf77dc4ccf1ea6a937983a073456895098eeb"
-  integrity sha512-OaXJTMh1RHnsunpK9iZfWeZhY4uf5GfDsd+rS4RWbdUG7u23EOf465EkcORokoPIyPV3vy3Mp2ehY2wsUJ2NDw==
-
-expo-dev-menu@0.8.6:
-  version "0.8.6"
-  resolved "https://registry.yarnpkg.com/expo-dev-menu/-/expo-dev-menu-0.8.6.tgz#a520409e55130060417b75d9bcf98b232111345f"
-  integrity sha512-lQ+prI3XQCjYwRvwEu8V1E9Y09KDROluQ1+I3VjwkjWNFdHaIqD2musO1t38mWhtAxx6hhgG82TonZrN6oiJbQ==
-  dependencies:
-    "@expo/config-plugins" "^4.0.2"
-    expo-dev-menu-interface "0.4.2"
-
 expo-error-recovery@~3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/expo-error-recovery/-/expo-error-recovery-3.0.4.tgz#de85c8c6b387d9b1e532256600882f2c2704383a"
@@ -11140,6 +11106,11 @@ join-component@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/join-component/-/join-component-1.1.0.tgz#b8417b750661a392bee2c2537c68b2a9d4977cd5"
   integrity sha1-uEF7dQZho5K+4sJTfGiyqdSXfNU=
+
+jotai@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/jotai/-/jotai-1.5.0.tgz#852770be0af377948d5325c4bf4619607bac8a70"
+  integrity sha512-fR8kLAAgkh/3tFD/eCNhhF2eWYinqeU6TAIDWlLccUFihhhcmbQs1FHkTTAFZXoq9UM9fsLqMqk54jffMKVC5Q==
 
 jpeg-js@^0.4.0:
   version "0.4.3"
@@ -14504,6 +14475,12 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.2.1, rc@^1.2.8, rc@~1.2.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
+"re-async-iterator@git+https://github.com/barodeur/re-async-iterator.git#v0.0.1":
+  version "0.0.1"
+  resolved "git+https://github.com/barodeur/re-async-iterator.git#03113867ee939fa2bdd95b723ba3c1034f611e38"
+  dependencies:
+    "@ryyppy/rescript-promise" "^2.1.0"
+
 react-dev-utils@~11.0.1:
   version "11.0.4"
   resolved "https://registry.yarnpkg.com/react-dev-utils/-/react-dev-utils-11.0.4.tgz#a7ccb60257a1ca2e0efe7a83e38e6700d17aa37a"
@@ -14591,10 +14568,9 @@ react-native-gesture-handler@~2.1.0:
     lodash "^4.17.21"
     prop-types "^15.7.2"
 
-react-native-reanimated@~2.3.1:
+"react-native-reanimated@git+https://github.com/software-mansion/react-native-reanimated#cec101716d5690f51187c0f739b3ea3e7080440e":
   version "2.3.1"
-  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-2.3.1.tgz#c7abad48f9e6c84610b0d5e270088ecd61750382"
-  integrity sha512-nzjVqwkB8eeyPKT2KoiA9EEz17ZMFSGMoOTC17Z9b5nE2Z4ZHjHM5EKhY0TlwzXFUuJAE9PhOfxF0wIO/maZSA==
+  resolved "git+https://github.com/software-mansion/react-native-reanimated#cec101716d5690f51187c0f739b3ea3e7080440e"
   dependencies:
     "@babel/plugin-transform-object-assign" "^7.10.4"
     "@types/invariant" "^2.2.35"

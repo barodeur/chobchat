@@ -1,3 +1,4 @@
+const path = require("path")
 const { withExpoWebpack } = require('@expo/electron-adapter');
 
 module.exports = config => {
@@ -8,6 +9,8 @@ module.exports = config => {
     forEach(rule => {
       rule.use.options.esModule = false;
     });
+
+  expoConfig.resolve.alias.react = path.resolve('./node_modules/react')
 
   return expoConfig
 };
