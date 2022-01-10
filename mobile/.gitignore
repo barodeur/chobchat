@@ -108,4 +108,5 @@ pc-api-*.json
 # electron-webpack
 /dist
 # @end @expo/electron-adapter
-.yarn/
+.yarn/*
+!.yarn/releases
