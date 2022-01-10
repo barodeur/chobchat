@@ -77,5 +77,6 @@
   "repository": {
     "type": "git",
     "url": "github:barodeur/chobchat"
-  }
+  },
+  "packageManager": "yarn@3.1.1"
 }
