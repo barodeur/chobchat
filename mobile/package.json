@@ -70,6 +70,7 @@
     "rescript": "^9.1.4"
   },
   "resolutions": {
+    "axios": "^0.21.2",
     "immer": "^9.0.6"
   },
   "private": true,
