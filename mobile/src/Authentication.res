@@ -10,36 +10,46 @@ type errItem =
 type err = array<errItem>
 
 let createConfigValue = configSelector =>
-  Jotai.Atom.makeDerived(getter =>
-    getter
-    ->Jotai.Atom.get(Config.jotaiAtom)
-    ->Option.mapWithDefault(Error([MissingConfig]), config => config->configSelector->Ok)
+  Jotai.Atom.makeComputed(({get}) =>
+    get(Config.jotaiAtom)->Option.mapWithDefault(Error([MissingConfig]), config =>
+      config->configSelector->Ok
+    )
   )
 
-let homeserverUrl = createConfigValue(c => c.homeserverUrl)
-let roomId = createConfigValue(c => c.roomId)
-
-let guestMatrixClient = Jotai.Atom.makeDerived(getter =>
-  getter->Jotai.Atom.get(homeserverUrl)->Result.map(Matrix.createClient(_))
+let homeserverUrl: Jotai.Atom.t<_, Jotai.Atom.Actions.set<string>, _> = createConfigValue(c =>
+  c.homeserverUrl
 )
-let flows = Jotai.Atom.makeAsyncDerived(getter =>
-  switch getter->Jotai.Atom.get(guestMatrixClient) {
+let roomId: Jotai.Atom.t<_, Jotai.Atom.Actions.set<string>, _> = createConfigValue(c => c.roomId)
+
+let guestMatrixClient: Jotai.Atom.t<
+  _,
+  Jotai.Atom.Actions.set<string>,
+  _,
+> = Jotai.Atom.makeComputed(({get}) => get(homeserverUrl)->Result.map(Matrix.createClient(_)))
+let flows: Jotai.Atom.t<_, Jotai.Atom.Actions.set<unit>, _> = Jotai.Atom.makeComputedAsync(({
+  get,
+}) =>
+  switch get(guestMatrixClient) {
   | Ok(client) => client->Matrix.Login.getFlows->PResult.mapError(err => [MatrixError(err)])
   | Error(_) as errorRes => Promise.resolve(errorRes)
   }
 )
 let sessionCounterState = Jotai.Atom.make(0)
 let loginTokenState = Jotai.Atom.make(None)
-let accessTokenFromStorage = Jotai.Atom.makeAsyncDerived(getter => {
-  getter->Jotai.Atom.get(sessionCounterState)->ignore
+let accessTokenFromStorage: Jotai.Atom.t<
+  _,
+  Jotai.Atom.Actions.set<unit>,
+  _,
+> = Jotai.Atom.makeComputedAsync(({get}) => {
+  get(sessionCounterState)->ignore
   CrossSecureStore.getItem("accessToken")->PResult.mapError(err => [StorageError(err)])
 })
-let accessTokenFromLoginToken = Jotai.Atom.makeAsyncDerived(getter =>
-  switch (
-    getter->Jotai.Atom.get(loginTokenState),
-    getter->Jotai.Atom.get(guestMatrixClient),
-    getter->Jotai.Atom.get(Device.deviceId),
-  ) {
+let accessTokenFromLoginToken: Jotai.Atom.t<
+  _,
+  Jotai.Atom.Actions.set<unit>,
+  _,
+> = Jotai.Atom.makeComputedAsync(({get}) =>
+  switch (get(loginTokenState), get(guestMatrixClient), get(Device.deviceId)) {
   | (Some(token), Ok(client), Ok(deviceId)) =>
     client
     ->Matrix.Login.loginWithToken({token: token, deviceId: Some(deviceId)})
@@ -53,11 +63,10 @@ let accessTokenFromLoginToken = Jotai.Atom.makeAsyncDerived(getter =>
     )->Promise.resolve
   }
 )
-let accessToken = Jotai.Atom.makeDerived(getter =>
-  switch (
-    getter->Jotai.Atom.get(accessTokenFromLoginToken),
-    getter->Jotai.Atom.get(accessTokenFromStorage),
-  ) {
+let accessToken: Jotai.Atom.t<_, Jotai.Atom.Actions.set<unit>, _> = Jotai.Atom.makeComputed(({
+  get,
+}) =>
+  switch (get(accessTokenFromLoginToken), get(accessTokenFromStorage)) {
   | (Ok(fromLoginOpt), Ok(fromStorageOpt)) =>
     [fromLoginOpt, fromStorageOpt]->Belt.Array.keepMap(v => v)->Belt.Array.get(0)->Result.ok
   | (fromLoginRes, fromStorageRes) =>
@@ -68,8 +77,10 @@ let accessToken = Jotai.Atom.makeDerived(getter =>
   }
 )
 
-let matrixClient = Jotai.Atom.makeDerived(getter =>
-  switch (getter->Jotai.Atom.get(accessToken), getter->Jotai.Atom.get(homeserverUrl)) {
+let matrixClient: Jotai.Atom.t<_, Jotai.Atom.Actions.set<unit>, _> = Jotai.Atom.makeComputed(({
+  get,
+}) =>
+  switch (get(accessToken), get(homeserverUrl)) {
   | (Ok(Some(token)), Ok(url)) =>
     Matrix.createClient(url, ~accessToken=token)->Option.some->Result.ok
   | (Ok(None), _) => None->Result.ok
@@ -78,9 +89,12 @@ let matrixClient = Jotai.Atom.makeDerived(getter =>
   }
 )
 
-let currentUserId = Jotai.Atom.makeAsyncDerived(getter =>
-  getter
-  ->Jotai.Atom.get(matrixClient)
+let currentUserId: Jotai.Atom.t<
+  _,
+  Jotai.Atom.Actions.set<unit>,
+  _,
+> = Jotai.Atom.makeComputedAsync(({get}) =>
+  get(matrixClient)
   ->Belt.Result.map(clientOpt =>
     clientOpt->Belt.Option.mapWithDefault(None->Result.ok->Promise.resolve, client =>
       client
@@ -184,9 +198,9 @@ module Authenticate = {
     let queryLoginToken =
       url->Option.flatMap(url => url->URL.make->URL.getSearchParam("loginToken"))
 
-    let matrixClient = Jotai.React.useReadable(guestMatrixClient)
-    let flows = Jotai.React.useReadable(flows)
-    let setLoginTokenState = Jotai.React.useWritable(loginTokenState)
+    let matrixClient = Jotai.React.useAtomValue(guestMatrixClient)
+    let flows = Jotai.React.useAtomValue(flows)
+    let setLoginTokenState = Jotai.React.useUpdateAtom(loginTokenState)
 
     React.useEffect1(() => {
       setLoginTokenState(_ => queryLoginToken)
@@ -227,13 +241,20 @@ module Authenticate = {
   }
 }
 
+include ReactNavigation.Stack.Make({
+  type params = unit
+})
+
 @react.component
 let make = (~children) => {
-  let currentUserId = Jotai.React.useReadable(currentUserId)
+  let currentUserId = Jotai.React.useAtomValue(currentUserId)
 
-  switch currentUserId {
-  | Ok(None) => <Authenticate />
-  | Ok(Some(_)) => children
-  | _ => <Text> {"OOPS"->React.string} </Text>
-  }
+  <Navigator screenOptions={_ => options(~headerShown=false, ())}>
+    {switch currentUserId {
+    | Ok(None) =>
+      <ScreenWithCallback name="Authenticate"> {_ => <Authenticate />} </ScreenWithCallback>
+    | Ok(Some(_)) => <ScreenWithCallback name="Home"> {_ => children} </ScreenWithCallback>
+    | _ => <Text> {"OOPS"->React.string} </Text>
+    }}
+  </Navigator>
 }

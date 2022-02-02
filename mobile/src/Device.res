@@ -7,7 +7,7 @@ let generateId = () => {
   `dev_${randomPart}`
 }
 
-let deviceId = Jotai.Atom.makeAsyncDerived(_ =>
+let deviceId: Jotai.Atom.t<_, Jotai.Atom.Actions.set<string>, _> = Jotai.Atom.makeComputedAsync(_ =>
   CrossSecureStore.getItem("deviceId")
   ->PResult.map(deviceIdOpt => deviceIdOpt->Belt.Option.getWithDefault(generateId()))
   ->PResult.flatMap(deviceId =>
