@@ -7,10 +7,8 @@ module ConversationsScreen = {
   include ReactNavigation.Stack.Make(StakeParams)
 
   let rooms: Jotai.Atom.t<_, Jotai.Atom.Actions.set<unit>, _> = Jotai.Atom.makeComputed(({get}) => {
-    get(MatrixState.joinedRooms)
-    ->Js.Dict.entries
-    ->Js.Array2.map(((roomId, _)) => {
-      get(MatrixState.rooms(roomId->Matrix.RoomId.fromString))
+    get(MatrixState.roomIdsBulastEventOriginServerTsDesc)->Js.Array2.map(roomId => {
+      get(MatrixState.rooms(roomId))
     })
   })
 
