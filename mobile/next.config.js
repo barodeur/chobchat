@@ -3,7 +3,11 @@ const withPlugins = require("next-compose-plugins");
 const withFonts = require("next-fonts");
 const withImages = require("next-images");
 
-const withTM = require("next-transpile-modules")(["react-native-web", "rescript-react-native"]);
+const withTM = require("next-transpile-modules")([
+  "react-native-web",
+  "rescript-react-native",
+  "rescript-react-navigation"
+]);
 
 const config = withPlugins(
   [

@@ -1,52 +1,66 @@
 module Atom = {
-  module Permissions = {
+  module Tags = {
     type w = [#writable]
     type r = [#readable]
-    type rw = [r | w]
+    type p = [#primitive]
+    type re = [#resettable]
+    type all = [r | w | p | re]
   }
-  type atom<'value, 'setValue, 'permissions> constraint 'permissions = [< Permissions.rw]
-  type t<'value, 'setValue, 'permissions> = atom<'value, 'setValue, 'permissions>
 
-  @module("jotai") external make: 'value => t<'value, 'value => 'value, Permissions.rw> = "atom"
+  module Actions = {
+    type t<'action>
+    type set<'value> = t<('value => 'value) => unit>
+    type update<'value> = t<'value => unit>
+    type dispatch<'action> = t<'action => unit>
+  }
 
-  type getter
-  let get = (type value, get: getter, atom: t<value, 'value, [> Permissions.r]>): value =>
-    Obj.magic(get, atom)
+  type atom<'value, 'action, 'tags>
+    constraint 'tags = [< Tags.all] constraint 'action = Actions.t<'setValue>
+  type t<'value, 'action, 'tags> = atom<'value, 'action, 'tags>
+    constraint 'tags = [< Tags.all] constraint 'action = Actions.t<'setValue>
 
-  type void
+  type void // used for readonly atoms without setter
+
+  type set<'value, 'action, 'tags> = t<'value, 'action, 'tags> constraint 'tags = [> Tags.w]
+
+  type get<'value, 'action, 'tags> = t<'value, 'action, 'tags> constraint 'tags = [> Tags.r]
+
+  type getter = {get: 'value 'action 'tags. get<'value, Actions.t<'action>, 'tags> => 'value}
+  type setter = {
+    get: 'value 'action 'tags. get<'value, Actions.t<'action>, 'tags> => 'value,
+    set: 'value 'setValue 'action 'tags. (
+      set<'value, Actions.t<'action>, 'tags>,
+      'setValue,
+    ) => unit,
+  }
+
+  type getValue<'value> = getter => 'value
+  type getValueAsync<'value> = getter => Js.Promise.t<'value>
+  type setValue<'args> = (setter, 'args) => unit
+  type setValueAsync<'args> = (setter, 'args) => Js.Promise.t<unit>
+
   @module("jotai")
-  external makeDerived: (getter => 'derivedValue) => t<'derivedValue, void, Permissions.r> = "atom"
+  external make: 'value => t<'value, Actions.set<'value>, [Tags.r | Tags.w | Tags.p]> = "atom"
 
-  @module("jotai")
-  external makeAsyncDerived: (getter => Js.Promise.t<'derivedValue>) => t<
-    'derivedValue,
-    void,
-    Permissions.r,
-  > = "atom"
+  @module("./jotai_wrapper")
+  external makeComputed: getValue<'value> => t<'value, _, [Tags.r]> = "atomWrapped"
+  @module("./jotai_wrapper")
+  external makeComputedAsync: getValueAsync<'value> => t<'value, _, [Tags.r]> = "atomWrapped"
 
-  type setter
-
-  let set = (
-    type value,
-    set: setter,
-    atom: t<value, 'arg, [> Permissions.w]>,
-    newValue: value,
-  ): unit => Obj.magic(set, atom, newValue)
-
-  @module("jotai")
-  external makeWritableDerived: (
-    getter => 'derivedValue,
-    (getter, setter, 'arg) => unit,
-  ) => t<'derivedValue, 'arg, Permissions.rw> = "atom"
+  @module("./jotai_wrapper")
+  external makeWritableComputed: (
+    getValue<'value>,
+    setValue<'args>,
+  ) => t<'value, Actions.update<'args>, [Tags.r | Tags.w]> = "atomWrapped"
 
   module Family = {
-    type t<'param, 'value, 'setValue, 'permission> = 'param => atom<'value, 'setValue, 'permission>
+    type t<'param, 'value, 'action, 'tags> = 'param => atom<'value, 'action, 'tags>
 
     @module("jotai/utils")
     external make: (
-      'param => atom<'value, 'setValue, 'permission>,
+      'param => atom<'value, 'action, 'permission>,
       ('param, 'param) => bool,
-    ) => t<'param, 'value, 'setValue, 'permission> = "atomFamily"
+    ) => t<'param, 'value, 'action, 'permission> = "atomFamily"
   }
 }
 
@@ -69,28 +83,22 @@ module React = {
   }
 
   @module("jotai")
-  external use: Atom.t<'value, 'setValue, Atom.Permissions.rw> => ('value, 'setValue => unit) =
-    "useAtom"
-
-  @module("jotai")
-  external useReadableInternal: Atom.t<'value, 'setValue, [> Atom.Permissions.r]> => (
+  external use: Atom.t<'value, Atom.Actions.t<'action>, [> Atom.Tags.r | Atom.Tags.w]> => (
     'value,
-    Atom.void,
+    'action,
   ) = "useAtom"
 
-  @module("jotai")
-  external useWritableInternal: Atom.t<'value, 'setValue, [> Atom.Permissions.w]> => (
-    Atom.void,
-    'setValue => unit,
-  ) = "useAtom"
+  @module("jotai/utils")
+  external useUpdateAtom: Atom.t<'value, Atom.Actions.t<'action>, [> Atom.Tags.w]> => 'action =
+    "useUpdateAtom"
 
-  let useReadable = atom => {
-    let (value, _: Atom.void) = useReadableInternal(atom)
-    value
-  }
+  @module("jotai/utils")
+  external useAtomValue: Atom.t<'value, _, [> Atom.Tags.r]> => 'value = "useAtomValue"
 
-  let useWritable = atom => {
-    let (_: Atom.void, setValue) = useWritableInternal(atom)
-    setValue
-  }
+  type callbackWithSetter<'args, 'result> = (Atom.setter, 'args) => 'result
+  type callbackAsync<'args, 'result> = 'args => Js.Promise.t<'result>
+
+  @module("./jotai_wrapper")
+  external useAtomCallback: callbackWithSetter<'args, 'result> => callbackAsync<'args, 'result> =
+    "useAtomCallback"
 }

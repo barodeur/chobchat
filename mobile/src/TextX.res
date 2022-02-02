@@ -6,9 +6,9 @@ let fontMap = Js.Dict.fromArray([
   ("Sniglet", "https://fonts.gstatic.com/s/sniglet/v12/cIf9MaFLtkE3UjaJxCk.ttf"),
 ])
 
-let font = Jotai.Atom.Family.make(
+let font: Jotai.Atom.Family.t<_, _, Jotai.Atom.Actions.set<string>, _> = Jotai.Atom.Family.make(
   fontFamily =>
-    Jotai.Atom.makeAsyncDerived(_ =>
+    Jotai.Atom.makeComputedAsync(_ =>
       fontFamily->Option.mapWithDefault(Promise.resolve(), name =>
         fontMap
         ->Js.Dict.get(name)
@@ -26,6 +26,6 @@ let make = (~style as styleProp=?, ~accessibilityRole=?, ~href=?, ~children) => 
     ->Belt.Array.keepMap(s => s)
     ->StyleSheet.flatten
 
-  Jotai.React.useReadable(font(style->getFontFabily->Js.Undefined.toOption))
+  Jotai.React.useAtomValue(font(style->getFontFabily->Js.Undefined.toOption))
   <Text style ?accessibilityRole ?href> ...children </Text>
 }

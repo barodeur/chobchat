@@ -13,7 +13,20 @@ type err =
   | UnknownToken({message: string})
   | Forbidden({message: string})
   | LimitExceeded({message: string, retryAfter: Duration.t})
+  | ParserError(Jzon.DecodingError.t)
   | Unknown
+
+module UserId = {
+  type t = UserId(string)
+
+  let fromString = str => UserId(str)
+  let toString = (UserId(str)) => str
+
+  let codec = Jzon.custom(
+    id => id->toString->Jzon.encodeWith(Jzon.string),
+    json => json->Jzon.decodeWith(Jzon.string)->Result.map(id => UserId(id)),
+  )
+}
 
 let endpoint: (client, 'a) => string = (client, path) =>
   `${client.homeserverUrl}/_matrix/client/r0${path}`
@@ -75,11 +88,11 @@ let createClient = (~accessToken=?, homeserverUrl) => {
 
 module Account = {
   module WhoAmI = {
-    type payload = {userId: string}
+    type payload = {userId: UserId.t}
     let payloadCodec = Jzon.object1(
       ({userId}) => userId,
       userId => {userId: userId}->Ok,
-      Jzon.field("user_id", Jzon.string),
+      Jzon.field("user_id", UserId.codec),
     )
   }
 
@@ -181,19 +194,31 @@ module Login = {
     )
 }
 
-module RoomEvent = {
-  module UnsignedData = {
-    type t = {age: option<Duration.t>}
+module RoomId = {
+  type t = RoomId(string)
+
+  let fromString = str => RoomId(str)
+  let toString = (RoomId(str)) => str
+  let equal = (a, b) => String.equal(a->toString, b->toString)
+}
+
+module EventContent = {
+  module Name = {
+    type t = {name: string}
+
+    let typeStr = "m.room.name"
 
     let codec = Jzon.object1(
-      ({age}) => age,
-      age => {age: age}->Ok,
-      Jzon.field("age", Duration.codec)->Jzon.optional,
+      ({name}) => name,
+      name => {name: name}->Ok,
+      Jzon.field("name", Jzon.string),
     )
   }
 
-  module RoomMessage = {
+  module Message = {
     type t = Text({body: string}) | Emote({body: string})
+
+    let typeStr = "m.room.message"
 
     let codec = Jzon.object2(
       message =>
@@ -213,45 +238,104 @@ module RoomEvent = {
     )
   }
 
+  module Member = {
+    type t = {displayname: string, membership: string}
+
+    let typeStr = "m.room.member"
+
+    let codec = Jzon.object2(
+      ({displayname, membership}) => (displayname, membership),
+      ((displayname, membership)) => {displayname: displayname, membership: membership}->Ok,
+      Jzon.field("displayname", Jzon.string),
+      Jzon.field("membership", Jzon.string),
+    )
+  }
+
+  type t = Name(Name.t) | Message(Message.t) | Member(Member.t)
+
+  let typeStr = content =>
+    switch content {
+    | Name(_) => Name.typeStr
+    | Message(_) => Message.typeStr
+    | Member(_) => Member.typeStr
+    }
+
+  let toJson = content =>
+    switch content {
+    | Name(name) => name->Jzon.encodeWith(Name.codec)
+    | Message(message) => message->Jzon.encodeWith(Message.codec)
+    | Member(member) => member->Jzon.encodeWith(Member.codec)
+    }
+
+  let fromJson = (type_, json) =>
+    switch type_ {
+    | "m.room.name" => json->Jzon.decodeWith(Name.codec)->Result.map(name => Name(name))
+    | "m.room.message" =>
+      json->Jzon.decodeWith(Message.codec)->Result.map(message => Message(message))
+    | "m.room.member" => json->Jzon.decodeWith(Member.codec)->Result.map(member => Member(member))
+    | _ => Error(#UnexpectedJsonValue([Field("type")], type_))
+    }
+}
+
+module SyncStateEvent = {
+  type t = {
+    eventId: string,
+    sender: UserId.t,
+    stateKey: string,
+    content: EventContent.t,
+  }
+
+  let codec = Jzon.object5(
+    ({eventId, sender, stateKey, content}) => (
+      content->EventContent.typeStr,
+      eventId,
+      sender,
+      stateKey,
+      content->EventContent.toJson,
+    ),
+    ((type_, eventId, sender, stateKey, contentJson)) => {
+      let contentRes = EventContent.fromJson(type_, contentJson)
+      contentRes->Belt.Result.map(content => {
+        {eventId: eventId, sender: sender, stateKey: stateKey, content: content}
+      })
+    },
+    Jzon.field("type", Jzon.string),
+    Jzon.field("event_id", Jzon.string),
+    Jzon.field("sender", UserId.codec),
+    Jzon.field("state_key", Jzon.string),
+    Jzon.field("content", Jzon.json),
+  )
+}
+
+module UnsignedData = {
+  type t = {age: option<Duration.t>}
+
+  let codec = Jzon.object1(
+    ({age}) => age,
+    age => {age: age}->Ok,
+    Jzon.field("age", Duration.codec)->Jzon.optional,
+  )
+}
+
+module SyncRoomEvent = {
   module RoomName = {
     type t = string
 
     let codec = Jzon.object1(name => name, name => name->Ok, Jzon.field("name", Jzon.string))
   }
 
-  module RoomPinedEvents = {
-    type t = array<string>
-  }
-
-  type content =
-    | RoomMessage(RoomMessage.t)
-    | RoomName(RoomName.t)
-
-  type t = {id: string, sender: string, content: content, unsigned: UnsignedData.t}
+  type t = {id: string, sender: UserId.t, content: EventContent.t, unsigned: UnsignedData.t}
 
   let codec = Jzon.object5(
     ({id, sender, content, unsigned}) => (
       id,
       sender,
-      switch content {
-      | RoomMessage(_) => "m.room.message"
-      | RoomName(_) => "M.room.name"
-      },
-      switch content {
-      | RoomMessage(message) => message->Jzon.encodeWith(RoomMessage.codec)
-      | RoomName(name) => name->Jzon.encodeWith(RoomName.codec)
-      },
+      content->EventContent.typeStr,
+      content->EventContent.toJson,
       unsigned,
     ),
     ((id, sender, type_, contentJson, unsigned)) => {
-      let contentRes = switch type_ {
-      | "m.room.message" =>
-        contentJson->Jzon.decodeWith(RoomMessage.codec)->Belt.Result.map(m => RoomMessage(m))
-      | "m.room.name" =>
-        contentJson->Jzon.decodeWith(RoomName.codec)->Belt.Result.map(n => RoomName(n))
-      | _ => Error(#UnexpectedJsonValue([Field("type")], type_))
-      }
-
+      let contentRes = EventContent.fromJson(type_, contentJson)
       contentRes->Belt.Result.map(content => {
         id: id,
         sender: sender,
@@ -260,123 +344,138 @@ module RoomEvent = {
       })
     },
     Jzon.field("event_id", Jzon.string),
-    Jzon.field("sender", Jzon.string),
+    Jzon.field("sender", UserId.codec),
     Jzon.field("type", Jzon.string),
     Jzon.field("content", Jzon.json),
     Jzon.field("unsigned", UnsignedData.codec),
   )
 }
 
-module Room = {
-  module GetMessages = {
-    type payload = {
-      start: string,
-      end: string,
-      chunk: array<RoomEvent.t>,
-    }
+// module Event = {
+//   type t = RoomEvent((string, RoomEvent.t))
+// }
 
-    let arrayFilter: Jzon.codec<'a> => Jzon.codec<array<'a>> = codec =>
-      Jzon.custom(
-        array => array->Belt.Array.map(v => v->Jzon.encodeWith(codec))->Js.Json.array,
-        json =>
-          json
-          ->Js.Json.decodeArray
-          ->Belt.Option.map(arr =>
-            arr->Belt.Array.keepMap(json => {
-              json->Jzon.decodeWith(codec)->Belt.Result.mapWithDefault(None, v => Some(v))
-            })
-          )
-          ->Belt.Option.mapWithDefault(Error(#UnexpectedJsonValue([], "")), v => Ok(v)),
-      )
+module Filter = {
+  module State = {
+    @deriving(abstract)
+    type t = {@optional includeRedundantMembers: bool}
 
-    let codec = Jzon.object3(
-      ({start, end, chunk}) => (start, end, chunk),
-      ((start, end, chunk)) => {start: start, end: end, chunk: chunk}->Ok,
-      Jzon.field("start", Jzon.string),
-      Jzon.field("end", Jzon.string),
-      Jzon.field("chunk", RoomEvent.codec->arrayFilter),
+    let codec = Jzon.object1(
+      filter => filter->includeRedundantMembersGet,
+      includeRedundantMembers => t(~includeRedundantMembers?, ())->Ok,
+      Jzon.field("include_redundant_members", Jzon.bool)->Jzon.optional,
     )
   }
 
-  let getMessages = (client, roomId) =>
-    client
-    ->fetch(`/rooms/${roomId}/messages?dir=b`)
-    ->PResult.flatMap(json =>
-      json->Jzon.decodeWith(GetMessages.codec)->Result.mapError(_ => Unknown)->Promise.resolve
+  module Room = {
+    @deriving(abstract)
+    type t = {@optional rooms: array<string>, @optional state: State.t}
+
+    let codec = Jzon.object2(
+      filter => (filter->roomsGet, filter->stateGet),
+      ((rooms, state)) => t(~rooms?, ~state?, ())->Ok,
+      Jzon.field("rooms", Jzon.array(Jzon.string))->Jzon.optional,
+      Jzon.field("state", State.codec)->Jzon.optional,
     )
-}
-
-module Event = {
-  type t = RoomEvent((string, RoomEvent.t))
-}
-
-module Filter = {
-  @deriving(abstract)
-  type roomFilter = {@optional rooms: array<string>}
+  }
 
   @deriving(abstract)
-  type t = {@optional room: roomFilter}
+  type t = {@optional room: Room.t}
 
   let codec = Jzon.object1(
     filter => filter->roomGet,
     room => t(~room?, ())->Ok,
-    Jzon.field(
-      "room",
-      Jzon.object1(
-        roomFilter => roomFilter->roomsGet,
-        rooms => roomFilter(~rooms?, ())->Ok,
-        Jzon.field("rooms", Jzon.array(Jzon.string))->Jzon.optional,
-      ),
-    )->Jzon.optional,
+    // Jzon.field("include_redundant_members", Jzon.bool)->Jzon.optional,
+    Jzon.field("room", Room.codec)->Jzon.optional,
+  )
+}
+
+let arrayFilter: Jzon.codec<'a> => Jzon.codec<array<'a>> = codec =>
+  Jzon.custom(
+    array => array->Belt.Array.map(v => v->Jzon.encodeWith(codec))->Js.Json.array,
+    json =>
+      json
+      ->Js.Json.decodeArray
+      ->Belt.Option.map(arr =>
+        arr->Belt.Array.keepMap(json => {
+          json->Jzon.decodeWith(codec)->Belt.Result.mapWithDefault(None, v => Some(v))
+        })
+      )
+      ->Belt.Option.mapWithDefault(Error(#UnexpectedJsonValue([], "")), v => Ok(v)),
+  )
+
+module State = {
+  type t = {events: array<SyncStateEvent.t>}
+
+  let codec = Jzon.object1(
+    ({events}) => events,
+    events => {events: events}->Ok,
+    Jzon.field("events", SyncStateEvent.codec->arrayFilter),
+  )
+}
+
+module Timeline = {
+  type t = {events: array<SyncRoomEvent.t>}
+
+  let codec = Jzon.object1(
+    ({events}) => events,
+    events => {events: events}->Ok,
+    Jzon.field("events", SyncRoomEvent.codec->arrayFilter),
+  )
+}
+
+module JoinedRoom = {
+  type t = {state: State.t, timeline: Timeline.t}
+
+  let codec = Jzon.object2(
+    ({state, timeline}) => (state, timeline),
+    ((state, timeline)) => {state: state, timeline: timeline}->Ok,
+    Jzon.field("state", State.codec),
+    Jzon.field("timeline", Timeline.codec),
+  )
+}
+
+module Rooms = {
+  type t = {join: Js.Dict.t<JoinedRoom.t>}
+
+  let codec = Jzon.object1(
+    ({join}) => join,
+    join => {join: join}->Ok,
+    Jzon.field("join", JoinedRoom.codec->Jzon.dict),
   )
 }
 
 module Sync = {
-  type timeline = {events: array<RoomEvent.t>}
-  type joinedRoom = {timeline: timeline}
-  type rooms = {join: Js.Dict.t<joinedRoom>}
-  type payload = {nextBatch: string, rooms: option<rooms>}
+  module Payload = {
+    type t = {nextBatch: string, rooms: option<Rooms.t>}
 
-  let timelineCodec = Jzon.object1(
-    ({events}) => events,
-    events => {events: events}->Ok,
-    Jzon.field("events", RoomEvent.codec->Room.GetMessages.arrayFilter),
-  )
+    let codec = Jzon.object2(
+      ({nextBatch, rooms}) => (nextBatch, rooms),
+      ((nextBatch, rooms)) => {nextBatch: nextBatch, rooms: rooms}->Ok,
+      Jzon.field("next_batch", Jzon.string),
+      Jzon.field("rooms", Rooms.codec)->Jzon.optional,
+    )
+  }
 
-  let joinedRoomCodec = Jzon.object1(
-    ({timeline}) => timeline,
-    timeline => {timeline: timeline}->Ok,
-    Jzon.field("timeline", timelineCodec),
-  )
-
-  let roomsCodec = Jzon.object1(
-    ({join}) => join,
-    join => {join: join}->Ok,
-    Jzon.field("join", joinedRoomCodec->Jzon.dict),
-  )
-
-  let payloadCodec = Jzon.object2(
-    ({nextBatch, rooms}) => (nextBatch, rooms),
-    ((nextBatch, rooms)) => {nextBatch: nextBatch, rooms: rooms}->Ok,
-    Jzon.field("next_batch", Jzon.string),
-    Jzon.field("rooms", roomsCodec)->Jzon.optional,
-  )
-
-  let sync = (client, ~since=?, ~timeout=10000, ~filter=?, ()) =>
+  let sync = (client, ~since=?, ~timeout=10000, ~filter=?, ~fullState=?, ()) =>
     client
     ->fetch(
       "/sync?"->Js.String2.concat(
         [
           ("since", since),
           ("timeout", Some(timeout->Belt.Int.toString)),
-          ("filter", filter->Belt.Option.map(filter => Filter.codec->Jzon.encodeString(filter))),
+          ("filter", filter->Belt.Option.map(Jzon.encodeStringWith(_, Filter.codec))),
+          ("full_state", fullState->Belt.Option.map(Jzon.encodeStringWith(_, Jzon.bool))),
         ]
         ->Belt.Array.keepMap(((key, opt)) => opt->Belt.Option.map(v => `${key}=${v}`))
         ->Belt.Array.joinWith("&", v => v),
       ),
     )
     ->PResult.flatMap(json =>
-      json->Jzon.decodeWith(payloadCodec)->Result.mapError(_ => Unknown)->Promise.resolve
+      json
+      ->Jzon.decodeWith(Payload.codec)
+      ->Result.mapError(err => ParserError(err))
+      ->Promise.resolve
     )
 }
 
@@ -384,27 +483,14 @@ let createSyncAsyncIterator = (client, ~filter=?, ()) => {
   AsyncIterator.sequence()->AsyncIterator.scan((state, _) => {
     let since = state.contents
     client
-    ->Sync.sync(~since?, ~filter?, ())
+    ->Sync.sync(~since?, ~filter?, ~fullState=since->Belt.Option.isNone, ())
     ->Promise.then(res => {
-      res->Belt.Result.mapWithDefault(Promise.resolve([]), payload => {
+      res->Belt.Result.mapWithDefault(res->Promise.resolve, payload => {
         state.contents = Some(payload.nextBatch)
-        payload.rooms
-        ->Option.mapWithDefault([], rooms =>
-          rooms.join
-          ->Js.Dict.entries
-          ->Js.Array2.reduce(
-            (events, (roomId, {timeline})) =>
-              Js.Array2.concat(
-                events,
-                timeline.events->Js.Array2.map(event => Event.RoomEvent(roomId, event)),
-              ),
-            [],
-          )
-        )
-        ->Promise.resolve
+        res->Promise.resolve
       })
     })
-  }, None)->AsyncIterator.flatMap(AsyncIterator.fromArray)
+  }, None)
 }
 
 let generateTransactionId = () => Crypto.generateRandomBase58(16)
@@ -422,7 +508,7 @@ module SendMessage = {
   let send = (client, roomId, body) => {
     let txId = generateTransactionId()
     client->fetch(
-      `/rooms/${roomId->encodeURIComponent}/send/m.room.message/${txId}`,
+      `/rooms/${roomId->RoomId.toString->encodeURIComponent}/send/m.room.message/${txId}`,
       ~method_=Put,
       ~body=Fetch.BodyInit.make(body->Jzon.encodeStringWith(inputCodec)),
     )

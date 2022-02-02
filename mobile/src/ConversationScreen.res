@@ -6,71 +6,12 @@ type variant = Sent | Received
 type message = {
   id: string,
   body: string,
-  sender: string,
+  sender: Matrix.UserId.t,
   variant: variant,
   age: Duration.t,
 }
 
 type err = AuthError(Authentication.err) | NotAuthenticated
-
-let roomEventsState = Jotai.Atom.Family.make(_ => Jotai.Atom.make([]), String.equal)
-// let roomEventsState = Jotai.Atom.make([])
-let syncObservable = Jotai.Atom.makeDerived(getter =>
-  switch (
-    getter->Jotai.Atom.get(Authentication.matrixClient),
-    getter->Jotai.Atom.get(Authentication.roomId),
-  ) {
-  | (Ok(Some(client)), Ok(roomId)) =>
-    client
-    ->Matrix.createSyncAsyncIterator(
-      ~filter=Matrix.Filter.t(~room=Matrix.Filter.roomFilter(~rooms=[roomId], ()), ()),
-      (),
-    )
-    ->Some
-    ->Ok
-  | (Ok(None), _) => None->Ok
-  | (matrixClientRes, mainRoomIdRes) =>
-    StateUtils.mergeResultErrors2(matrixClientRes, mainRoomIdRes)
-  }
-)
-
-let useSync = roomId => {
-  let asyncIteratorRes = Jotai.React.useReadable(syncObservable)
-  let setRoomEvents = Jotai.React.useWritable(roomEventsState(roomId))
-  // let setRoomEvents = Jotai.React.useWritable(roomEventsState)
-
-  React.useEffect3(() => {
-    asyncIteratorRes
-    ->Result.map(
-      Option.flatMap(_, asyncIterator => {
-        let canceledRef = ref(false)
-        let rec loop = () =>
-          asyncIterator.next()
-          ->Promise.thenResolve(eventOpt =>
-            eventOpt->Option.mapWithDefault((), event => {
-              if !canceledRef.contents {
-                switch event {
-                | RoomEvent(rId, roomEvent) =>
-                  if roomId == rId {
-                    setRoomEvents(events => events->Belt.Array.concat([roomEvent]))
-                  }
-                }
-                loop()
-              }
-            })
-          )
-          ->ignore
-
-        loop()
-
-        Some(() => canceledRef.contents = true)
-      }),
-    )
-    ->Result.getWithDefault(None)
-  }, (asyncIteratorRes, setRoomEvents, roomId))
-
-  asyncIteratorRes->Result.map(_ => ())
-}
 
 module Message = {
   @react.component
@@ -86,7 +27,9 @@ module Message = {
         (),
       )}>
       {variant == Received
-        ? <TextX style={Style.textStyle(~color="#00000060", ())}> {sender->React.string} </TextX>
+        ? <TextX style={Style.textStyle(~color="#00000060", ())}>
+            {sender->Matrix.UserId.toString->React.string}
+          </TextX>
         : React.null}
       <View
         style={viewStyle(
@@ -125,15 +68,12 @@ let inverted = switch PlatformX.platform {
 }
 
 @react.component
-let make = () => {
-  let roomId = Jotai.React.useReadable(Authentication.roomId)
-  let events =
-    roomId
-    ->Result.map(id => Jotai.React.useReadable(roomEventsState(id)))
-    ->Result.mapError(err => AuthError(err))
-  let syncRes = roomId->Result.flatMap(id => useSync(id))
-  let currentUserId = Jotai.React.useReadable(Authentication.currentUserId)
-  let matrixClient = Jotai.React.useReadable(Authentication.matrixClient)
+let make = (~navigation as _, ~route: RootStack.route) => {
+  let roomId = route.params->Option.map(params => params.roomId)->Option.getExn // Get roomId from navigation state
+  let events = Jotai.React.useAtomValue(MatrixState.roomEvents(roomId))->Ok
+  let syncRes = Ok()
+  let currentUserId = Jotai.React.useAtomValue(Authentication.currentUserId)
+  let matrixClient = Jotai.React.useAtomValue(Authentication.matrixClient)
 
   let listRef = React.useRef(Js.Nullable.null)
 
@@ -146,7 +86,7 @@ let make = () => {
           opt
           ->Belt.Array.keepMap(({id, sender, content, unsigned: {age}}) =>
             switch (content, age) {
-            | (RoomMessage(Text({body})), Some(age)) =>
+            | (Message(Text({body})), Some(age)) =>
               Some({
                 variant: sender == userId ? Sent : Received,
                 id: id,
@@ -167,7 +107,9 @@ let make = () => {
     switch listRef.current->Js.Nullable.toOption {
     | None => ()
     | Some(ref) => Timeout.set(() => {
-        ref->FlatList.scrollToEnd
+        if !inverted {
+          ref->FlatList.scrollToEnd
+        }
         ()
       }, 100)->ignore
     }
@@ -177,8 +119,8 @@ let make = () => {
   let (text, setText) = React.useState(_ => "")
 
   let handleSubmit = React.useCallback2(_ => {
-    switch (matrixClient, roomId) {
-    | (Ok(Some(client)), Ok(roomId)) =>
+    switch matrixClient {
+    | Ok(Some(client)) =>
       client
       ->Matrix.SendMessage.send(roomId, text)
       ->Promise.thenResolve(_ => setText(_ => ""))
@@ -188,54 +130,10 @@ let make = () => {
     ()
   }, (text, matrixClient))
 
-  let setSessionCounter = Jotai.React.useWritable(Authentication.sessionCounterState)
-  let setLoginToken = Jotai.React.useWritable(Authentication.loginTokenState)
-
-  let handleLogoutPress = React.useCallback2(_ => {
-    Confirm.confirm(`Es-tu sûr ?`, () => {
-      CrossSecureStore.removeItem("accessToken")
-      ->Promise.thenResolve(res => {
-        if res->Result.isOk {
-          setLoginToken(_ => None)
-          setSessionCounter(v => v + 1)
-        }
-      })
-      ->ignore
-    })
-  }, (setLoginToken, setSessionCounter))
-
   syncRes->Result.mapWithDefault(
     <Text> {"Impossible de synchroniser les messages"->React.string} </Text>,
     _ =>
       <View style={viewStyle(~flex=1., ~backgroundColor=Colors.green, ())}>
-        <ReactNativeSafeAreaContext.SafeAreaView
-          edges=[#top] style={viewStyle(~paddingBottom=5.->dp, ~flexDirection=#row, ())}>
-          <View style={viewStyle(~flex=1., ())} />
-          <TextX
-            style={textStyle(
-              ~flex=1.,
-              ~marginVertical=10.->Style.dp,
-              ~color=Color.white,
-              ~textAlign=#center,
-              ~fontSize=24.,
-              ~fontFamily="Sniglet",
-              (),
-            )}>
-            {"ChobChat"->React.string}
-          </TextX>
-          <View
-            style={viewStyle(
-              ~flex=1.,
-              ~alignItems=#flexEnd,
-              ~justifyContent=#center,
-              ~paddingRight=10.->Style.dp,
-              (),
-            )}>
-            <TouchableOpacity onPress={handleLogoutPress}>
-              <TextX style={textStyle()}> {"Logout"->React.string} </TextX>
-            </TouchableOpacity>
-          </View>
-        </ReactNativeSafeAreaContext.SafeAreaView>
         <KeyboardAvoidingView
           behavior=#padding
           enabled={PlatformX.platform == Mobile(Ios)}

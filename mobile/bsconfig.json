@@ -22,6 +22,6 @@
     "re-async-iterator",
     "rescript-jzon",
     "rescript-react-native",
-    "rescript-recoil"
+    "rescript-react-navigation"
   ]
 }
