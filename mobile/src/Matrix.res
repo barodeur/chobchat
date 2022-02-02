@@ -283,20 +283,28 @@ module SyncStateEvent = {
     sender: UserId.t,
     stateKey: string,
     content: EventContent.t,
+    originServerTs: float,
   }
 
-  let codec = Jzon.object5(
-    ({eventId, sender, stateKey, content}) => (
+  let codec = Jzon.object6(
+    ({eventId, sender, stateKey, content, originServerTs}) => (
       content->EventContent.typeStr,
       eventId,
       sender,
       stateKey,
       content->EventContent.toJson,
+      originServerTs,
     ),
-    ((type_, eventId, sender, stateKey, contentJson)) => {
+    ((type_, eventId, sender, stateKey, contentJson, originServerTs)) => {
       let contentRes = EventContent.fromJson(type_, contentJson)
       contentRes->Belt.Result.map(content => {
-        {eventId: eventId, sender: sender, stateKey: stateKey, content: content}
+        {
+          eventId: eventId,
+          sender: sender,
+          stateKey: stateKey,
+          content: content,
+          originServerTs: originServerTs,
+        }
       })
     },
     Jzon.field("type", Jzon.string),
@@ -304,6 +312,7 @@ module SyncStateEvent = {
     Jzon.field("sender", UserId.codec),
     Jzon.field("state_key", Jzon.string),
     Jzon.field("content", Jzon.json),
+    Jzon.field("origin_server_ts", Jzon.float),
   )
 }
 
@@ -324,23 +333,31 @@ module SyncRoomEvent = {
     let codec = Jzon.object1(name => name, name => name->Ok, Jzon.field("name", Jzon.string))
   }
 
-  type t = {id: string, sender: UserId.t, content: EventContent.t, unsigned: UnsignedData.t}
+  type t = {
+    id: string,
+    sender: UserId.t,
+    content: EventContent.t,
+    unsigned: UnsignedData.t,
+    originServerTs: float,
+  }
 
-  let codec = Jzon.object5(
-    ({id, sender, content, unsigned}) => (
+  let codec = Jzon.object6(
+    ({id, sender, content, unsigned, originServerTs}) => (
       id,
       sender,
       content->EventContent.typeStr,
       content->EventContent.toJson,
       unsigned,
+      originServerTs,
     ),
-    ((id, sender, type_, contentJson, unsigned)) => {
+    ((id, sender, type_, contentJson, unsigned, originServerTs)) => {
       let contentRes = EventContent.fromJson(type_, contentJson)
       contentRes->Belt.Result.map(content => {
         id: id,
         sender: sender,
         content: content,
         unsigned: unsigned,
+        originServerTs: originServerTs,
       })
     },
     Jzon.field("event_id", Jzon.string),
@@ -348,6 +365,7 @@ module SyncRoomEvent = {
     Jzon.field("type", Jzon.string),
     Jzon.field("content", Jzon.json),
     Jzon.field("unsigned", UnsignedData.codec),
+    Jzon.field("origin_server_ts", Jzon.float),
   )
 }
 
