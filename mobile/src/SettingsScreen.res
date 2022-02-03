@@ -26,11 +26,5 @@ let make = (~navigation as _, ~route as _) => {
       iconComponent={props =>
         <Icon.Feather name="power" color={props["color"]} size={16.->Style.dp} />}
     />
-    // <TouchableHighlight onPress=handleLogoutPress>
-    //   <View style={Style.viewStyle(~flexDirection=#row, ())}>
-    //     <Icon.Feather name="power" color="red" size={16.->Style.dp} />
-    //     <TextX style={Style.textStyle(~color="red", ())}> {"Se deconnecter"->React.string} </TextX>
-    //   </View>
-    // </TouchableHighlight>
   </View>
 }
