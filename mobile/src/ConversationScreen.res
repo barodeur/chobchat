@@ -75,6 +75,13 @@ let make = (~navigation as _, ~route: RootStack.route) => {
     ->ignore
   })
 
+  let renderHeader = _ =>
+    <View style={Style.viewStyle(~flex=1.0, ~alignItems=#center, ())}>
+      <TextX style={Style.textStyle(~color="rgba(0, 0, 0, 0.2)", ())}>
+        {roomId->Matrix.RoomId.toString->React.string}
+      </TextX>
+    </View>
+
   <View style={viewStyle(~flex=1., ~backgroundColor=Colors.green, ())}>
     <KeyboardAvoidingView
       behavior=#padding enabled={PlatformX.platform == Mobile(Ios)} style={viewStyle(~flex=1., ())}>
@@ -84,14 +91,18 @@ let make = (~navigation as _, ~route: RootStack.route) => {
           <FlatList
             ref={Ref.value(listRef)}
             style={viewStyle(~flex=1., ~backgroundColor=Colors.grey, ())}
-            _ListHeaderComponent={_ =>
-              <View style={Style.viewStyle(~flex=1.0, ~alignItems=#center, ())}>
-                <TextX style={Style.textStyle(~color="rgba(0, 0, 0, 0.2)", ())}>
-                  {roomId->Matrix.RoomId.toString->React.string}
-                </TextX>
-              </View>}
+            _ListHeaderComponent=?{if inverted {
+              None
+            } else {
+              Some(renderHeader)
+            }}
+            _ListFooterComponent=?{if inverted {
+              Some(renderHeader)
+            } else {
+              None
+            }}
             contentContainerStyle={viewStyle(~paddingVertical=10.->dp, ())}
-            data=eventIds
+            data={eventIds->ArrayX.reverse}
             renderItem={({item: eventId}) => <MatrixEvent eventId />}
             keyExtractor={(eventId, _) => eventId->Matrix.EventId.toString}
             inverted
