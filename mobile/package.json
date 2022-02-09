@@ -74,6 +74,7 @@
     "glob-parent": "~5.1.2",
     "immer": "^9.0.6",
     "node-fetch": "~2.6.7",
+    "node-forge": "~1.0.0",
     "trim-newlines": "~3.0.1"
   },
   "private": true,
