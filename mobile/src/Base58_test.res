@@ -3,12 +3,12 @@ module Uint8Array = Js.TypedArray2.Uint8Array
 @val @scope("Array")
 external arrayFromUint8Array: Uint8Array.t => array<int> = "from"
 
-let charArrToString = chars => chars->Belt.Array.map(String.make(1, _))->Js.Array2.joinWith(_, "")
-let stringToCharArr = str => str->Js.String2.split("")->Belt.Array.map(String.get(_, 0))
+let charArrToString = chars => chars->ArrayX.map(String.make(1, _))->ArrayX.joinWith(_, "")
+let stringToCharArr = str => str->Js.String2.split("")->ArrayX.map(String.get(_, 0))
 let stringToByteArr = str =>
-  str->stringToCharArr->Belt.Array.map(Char.code)->Js.TypedArray2.Uint8Array.make
+  str->stringToCharArr->ArrayX.map(Char.code)->Js.TypedArray2.Uint8Array.make
 let byteArrToString: Uint8Array.t => string = bytes =>
-  bytes->arrayFromUint8Array->Belt.Array.map(Char.chr)->charArrToString
+  bytes->arrayFromUint8Array->ArrayX.map(Char.chr)->charArrToString
 
 Jest.describe("Base58", () => {
   Jest.describe("encode", () => {

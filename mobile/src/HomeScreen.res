@@ -7,7 +7,7 @@ module ConversationsScreen = {
   include ReactNavigation.Stack.Make(StakeParams)
 
   let rooms: Jotai.Atom.t<_, Jotai.Atom.Actions.set<unit>, _> = Jotai.Atom.makeComputed(({get}) => {
-    get(MatrixState.roomIdsBulastEventOriginServerTsDesc)->Js.Array2.map(roomId => {
+    get(MatrixState.roomIdsBulastEventOriginServerTsDesc)->ArrayX.map(roomId => {
       get(MatrixState.rooms(roomId))
     })
   })
@@ -20,14 +20,14 @@ module ConversationsScreen = {
 
     <View>
       {rooms
-      ->Js.Array2.map(room => {
+      ->ArrayX.map(room => {
         <ListButton
           key={room.id->Matrix.RoomId.toString}
           title={room.name->Belt.Option.getWithDefault(
             room.members
             ->Js.Dict.entries
-            ->Js.Array2.filter(((userId, _)) => currentUserId->Matrix.UserId.toString != userId)
-            ->Belt.Array.get(0)
+            ->ArrayX.filter(((userId, _)) => currentUserId->Matrix.UserId.toString != userId)
+            ->ArrayX.get(0)
             ->Option.map(((userId, _)) => userId)
             ->Option.getWithDefault(room.id->Matrix.RoomId.toString),
           )}
@@ -60,7 +60,7 @@ module HomeTabsScreen = {
         <ReactNativeSafeAreaContext.SafeAreaView edges=[#bottom]>
           <View style={Style.viewStyle(~flexDirection=#row, ())}>
             {["threads", "settings"]
-            ->Js.Array2.mapi((key, idx) => {
+            ->ArrayX.mapi((key, idx) => {
               let isSelected = idx == selectedIdx
               <TouchableOpacity
                 key

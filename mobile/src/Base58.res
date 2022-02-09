@@ -5,5 +5,5 @@ include BaseX.Make({
   let alphabet =
     "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
     ->Js.String2.split("")
-    ->Belt.Array.map(String.get(_, 0))
+    ->ArrayX.map(String.get(_, 0))
 })

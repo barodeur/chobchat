@@ -20,5 +20,5 @@ let getRandomValues = switch PlatformX.platform {
 let generateRandomBase58 = bytes => {
   let array = Js.TypedArray2.Uint8Array.fromLength(bytes)
   getRandomValues(. array)
-  array->Base58.encode->Js.Array2.map(String.make(1, _))->Js.Array2.joinWith("")
+  array->Base58.encode->ArrayX.map(String.make(1, _))->ArrayX.joinWith("")
 }
