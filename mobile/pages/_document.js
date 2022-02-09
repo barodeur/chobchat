@@ -1,8 +1,10 @@
-import { getInitialProps } from '@expo/next-adapter/document';
-import Document, { Html, Head, Main, NextScript } from 'next/document';
 import React from 'react';
+import { getInitialProps } from '@expo/next-adapter/document';
+import Document, { Html, Head, Main, NextScript } from "next/document"
 
-class CustomDocument extends Document {
+export default class extends Document {
+  static getInitialProps = getInitialProps
+
   render() {
     return (
       <Html>
@@ -17,7 +19,3 @@ class CustomDocument extends Document {
     );
   }
 }
-
-CustomDocument.getInitialProps = getInitialProps;
-
-export default CustomDocument;
