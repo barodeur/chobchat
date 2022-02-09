@@ -71,6 +71,8 @@
   "resolutions": {
     "axios": "^0.21.2",
     "immer": "^9.0.6",
+    "node-fetch": "~2.6.7",
+    "trim-newlines": "~3.0.1",
     "xdl/tar": "~4.4.14"
   },
   "private": true,
