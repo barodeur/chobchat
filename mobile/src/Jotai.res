@@ -62,6 +62,16 @@ module Atom = {
       ('param, 'param) => bool,
     ) => t<'param, 'value, 'action, 'permission> = "atomFamily"
   }
+
+  @module("jotai/utils")
+  external waitForAll: array<t<'value, _, _>> => t<array<'value>, _, _> = "waitForAll"
+
+  @module("jotai/utils")
+  external waitForAll2: (t<'a, _, _>, t<'b, _, _>) => t<('a, 'b), _, _> = "waitForAll"
+
+  @module("jotai/utils")
+  external waitForAll3: (t<'a, _, _>, t<'b, _, _>, t<'c, _, _>) => t<('a, 'b, 'c), _, _> =
+    "waitForAll"
 }
 
 module React = {
