@@ -83,27 +83,16 @@ let roomIdsBylastEventOriginServerTsDesc: Jotai.Atom.t<
   Jotai.Atom.Actions.set<unit>,
   _,
 > = Jotai.Atom.makeComputed(({get}) => {
-  let roomIds = get(joinedRooms)->Belt.HashSet.toArray
-  if roomIds->ArrayX.length == 0 {
-    []
-  } else {
-    roomIds
-    ->ArrayX.zip(
-      roomIds
-      ->ArrayX.map(roomId => roomLastEventOriginServerTs(roomId))
-      ->Jotai.Atom.waitForAll
-      ->get,
-    )
-    ->ArrayX.sortInPlaceWith(((_, lastEventOriginServerTsA), (_, lastEventOriginServerTsB)) =>
-      switch lastEventOriginServerTsB->Option.getWithDefault(0.) -.
-        lastEventOriginServerTsA->Option.getWithDefault(0.) {
-      | v if v < 0. => -1
-      | v if v > 0. => 1
-      | _ => 0
-      }
-    )
-    ->ArrayX.map(((roomId, _)) => roomId)
-  }
+  get(joinedRooms)
+  ->Belt.HashSet.toArray
+  ->ArrayX.sortInPlaceWith((roomA, roomB) =>
+    switch get(roomLastEventOriginServerTs(roomB))->Option.getWithDefault(0.) -.
+      get(roomLastEventOriginServerTs(roomA))->Option.getWithDefault(0.) {
+    | v if v < 0. => -1
+    | v if v > 0. => 1
+    | _ => 0
+    }
+  )
 })
 
 let syncAsyncIterator: Jotai.Atom.t<_, Jotai.Atom.Actions.set<unit>, _> = Jotai.Atom.makeComputed(({
