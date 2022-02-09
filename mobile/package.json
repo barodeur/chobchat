@@ -1,16 +1,15 @@
 {
   "scripts": {
-    "android": "react-native run-android",
     "build": "yarn re:build && yarn next build",
+    "dev:electron:start": "expo-electron start",
+    "dev:mobile:start": "expo start",
+    "dev:web:start": "next dev",
+    "dist:linux": "electron-builder --config ./electron-builder-config.yaml -l -p never",
     "eas-build-post-install": "yarn re:build",
     "eject": "expo eject",
-    "ios": "react-native run-ios",
-    "re:build": "rescript build",
-    "re:start": "rescript build -w",
-    "start": "expo start --dev-client",
-    "web": "expo start --web",
     "electron:build": "electron-webpack",
-    "dist:linux": "electron-builder --config ./electron-builder-config.yaml -l -p never"
+    "re:build": "rescript build",
+    "re:start": "rescript build -w"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "~1.15.0",
