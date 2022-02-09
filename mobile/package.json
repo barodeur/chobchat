@@ -73,6 +73,7 @@
     "expo-cli/xdl/tar": "~4.4.19",
     "glob-parent": "~5.1.2",
     "immer": "^9.0.6",
+    "nanoid": "~3.1.31",
     "node-fetch": "~2.6.7",
     "node-forge": "~1.0.0",
     "trim-newlines": "~3.0.1"
