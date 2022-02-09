@@ -68,11 +68,11 @@ let accessToken: Jotai.Atom.t<_, Jotai.Atom.Actions.set<unit>, _> = Jotai.Atom.m
 }) =>
   switch (get(accessTokenFromLoginToken), get(accessTokenFromStorage)) {
   | (Ok(fromLoginOpt), Ok(fromStorageOpt)) =>
-    [fromLoginOpt, fromStorageOpt]->Belt.Array.keepMap(v => v)->Belt.Array.get(0)->Result.ok
+    [fromLoginOpt, fromStorageOpt]->ArrayX.keepMap(v => v)->ArrayX.get(0)->Result.ok
   | (fromLoginRes, fromStorageRes) =>
     [fromLoginRes, fromStorageRes]
-    ->Belt.Array.map(Result.getErrorWithDefault(_, []))
-    ->Belt.Array.concatMany
+    ->ArrayX.map(Result.getErrorWithDefault(_, []))
+    ->ArrayX.flatten
     ->Result.error
   }
 )
@@ -114,13 +114,13 @@ let currentUserId: Jotai.Atom.t<
         switch res {
         | Error(errors)
           if errors
-          ->Js.Array2.filter(error =>
+          ->ArrayX.filter(error =>
             switch error {
             | MatrixError(UnknownToken(_)) => true
             | _ => false
             }
           )
-          ->Belt.Array.length > 0 =>
+          ->ArrayX.length > 0 =>
           CrossSecureStore.removeItem("accessToken")->Promise.thenResolve(_ => Ok(None))
         | _ => Promise.resolve(res)
         }
@@ -172,7 +172,7 @@ module Flow = {
     switch flow {
     | SSO({identityProviders}) =>
       identityProviders
-      ->Js.Array2.map(({id, name}) =>
+      ->ArrayX.map(({id, name}) =>
         <IdentityProviderButton
           style={Style.viewStyle(~alignSelf=#center, ())}
           key=id
@@ -231,7 +231,7 @@ module Authenticate = {
       {switch (matrixClient, flows) {
       | (Ok(client), Ok(flows)) =>
         flows
-        ->Belt.Array.mapWithIndex((idx, flow) =>
+        ->ArrayX.mapi((flow, idx) =>
           <Flow key={idx->Belt.Int.toString} flow redirectUrl matrixClient=client />
         )
         ->React.array

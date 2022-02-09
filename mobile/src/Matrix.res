@@ -41,7 +41,7 @@ let fetch = (client, ~method_=?, ~body=?, path) =>
       ~body?,
       ~headers=Fetch.HeadersInit.makeWithDict(
         [("Accept", "application/json"), ("Content-Type", "application/json")]
-        ->Js.Array2.concat(
+        ->ArrayX.concat(
           client.accessToken->Belt.Option.mapWithDefault([], token => [
             ("Authorization", `Bearer ${token}`),
           ]),
@@ -410,12 +410,12 @@ module Filter = {
 
 let arrayFilter: Jzon.codec<'a> => Jzon.codec<array<'a>> = codec =>
   Jzon.custom(
-    array => array->Belt.Array.map(v => v->Jzon.encodeWith(codec))->Js.Json.array,
+    array => array->ArrayX.map(v => v->Jzon.encodeWith(codec))->Js.Json.array,
     json =>
       json
       ->Js.Json.decodeArray
       ->Belt.Option.map(arr =>
-        arr->Belt.Array.keepMap(json => {
+        arr->ArrayX.keepMap(json => {
           json->Jzon.decodeWith(codec)->Belt.Result.mapWithDefault(None, v => Some(v))
         })
       )
@@ -485,8 +485,8 @@ module Sync = {
           ("filter", filter->Belt.Option.map(Jzon.encodeStringWith(_, Filter.codec))),
           ("full_state", fullState->Belt.Option.map(Jzon.encodeStringWith(_, Jzon.bool))),
         ]
-        ->Belt.Array.keepMap(((key, opt)) => opt->Belt.Option.map(v => `${key}=${v}`))
-        ->Belt.Array.joinWith("&", v => v),
+        ->ArrayX.keepMap(((key, opt)) => opt->Belt.Option.map(v => `${key}=${v}`))
+        ->ArrayX.joinWith("&"),
       ),
     )
     ->PResult.flatMap(json =>

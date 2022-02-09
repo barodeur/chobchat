@@ -84,7 +84,7 @@ let make = (~navigation as _, ~route: RootStack.route) => {
       userIdOpt->Option.mapWithDefault(Error(NotAuthenticated), userId => {
         events->Result.map(opt =>
           opt
-          ->Belt.Array.keepMap(({id, sender, content, unsigned: {age}}) =>
+          ->ArrayX.keepMap(({id, sender, content, unsigned: {age}}) =>
             switch (content, age) {
             | (Message(Text({body})), Some(age)) =>
               Some({
@@ -97,7 +97,7 @@ let make = (~navigation as _, ~route: RootStack.route) => {
             | _ => None
             }
           )
-          ->(inverted ? Belt.Array.reverse : arr => arr)
+          ->(inverted ? ArrayX.reverse : arr => arr)
         )
       })
     )

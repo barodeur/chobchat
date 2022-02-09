@@ -23,7 +23,7 @@ let make = (~style as styleProp=?, ~accessibilityRole=?, ~href=?, ~children) => 
   open Style
   let style =
     [Some(textStyle(~fontFamily="Sniglet", ())), styleProp]
-    ->Belt.Array.keepMap(s => s)
+    ->ArrayX.keepMap(s => s)
     ->StyleSheet.flatten
 
   Jotai.React.useAtomValue(font(style->getFontFabily->Js.Undefined.toOption))

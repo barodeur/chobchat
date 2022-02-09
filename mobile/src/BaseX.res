@@ -19,11 +19,11 @@ module Make = (Base: Base) => {
   exception NonZeroCarry
   exception InvalidDigit(Base.digit)
 
-  if Base.alphabet->Array.length < 2 {
+  if Base.alphabet->ArrayX.length < 2 {
     raise(AlphabetTooShort)
   }
 
-  if Base.alphabet->Array.length > 256 {
+  if Base.alphabet->ArrayX.length > 256 {
     raise(AlphabetTooLong)
   }
 
@@ -34,12 +34,12 @@ module Make = (Base: Base) => {
   })
 
   let baseMap = Belt.HashMap.make(~hintSize=256, ~id=module(DigitHash))
-  Base.alphabet->Js.Array2.forEachi((c, i) => {
+  Base.alphabet->ArrayX.forEachi((c, i) => {
     baseMap->Belt.HashMap.set(c, i)
   })
 
-  let baseSize = Base.alphabet->Array.length
-  let leader = Base.alphabet->Array.unsafe_get(0)
+  let baseSize = Base.alphabet->ArrayX.length
+  let leader = Base.alphabet->ArrayX.unsafe_get(0)
   let factor = Math.log(baseSize->Int.toFloat) /. Math.log(256.)
   let ifactor = Math.log(256.) /. Math.log(baseSize->Int.toFloat)
 
@@ -89,11 +89,15 @@ module Make = (Base: Base) => {
       }
 
       // Translate the result into a string.
-      let str = Array.make(zeroes.contents, leader)
+      let str = ArrayX.make(zeroes.contents, leader)
       while it2.contents < size {
-        let newChar = Base.alphabet->Array.get(b58->Uint8Array.unsafe_get(it2.contents))
-        str->Js.Array2.push(newChar)->ignore
-        it2.contents = it2.contents + 1
+        Base.alphabet
+        ->ArrayX.get(b58->Uint8Array.unsafe_get(it2.contents))
+        ->Option.map(newChar => {
+          str->ArrayX.push(newChar)->ignore
+          it2.contents = it2.contents + 1
+        })
+        ->ignore
       }
 
       str
@@ -101,22 +105,21 @@ module Make = (Base: Base) => {
   }
 
   let decode: array<Base.digit> => Uint8Array.t = code => {
-    if code->Belt.Array.length == 0 {
+    if code->ArrayX.length == 0 {
       Uint8Array.fromLength(0)
     } else {
       let psz = ref(0)
       let zeroes = ref(0)
       let length = ref(0)
-      while code->Array.unsafe_get(psz.contents) == leader {
+      while code->ArrayX.unsafe_get(psz.contents) == leader {
         zeroes.contents = zeroes.contents + 1
         psz.contents = psz.contents + 1
       }
 
-      let size =
-        ((code->Belt.Array.length - psz.contents)->Int.toFloat *. factor +. 1.)->Math.floor_int
+      let size = ((code->ArrayX.length - psz.contents)->Int.toFloat *. factor +. 1.)->Math.floor_int
       let b256 = Uint8Array.fromLength(size)
-      while code->Belt.Array.get(psz.contents)->Belt.Option.isSome {
-        let digit = code->Js.Array2.unsafe_get(psz.contents)
+      while code->ArrayX.get(psz.contents)->Belt.Option.isSome {
+        let digit = code->ArrayX.unsafe_get(psz.contents)
         let digitCode = baseMap->Belt.HashMap.get(digit)
         if digitCode->Belt.Option.isNone {
           raise(InvalidDigit(digit))

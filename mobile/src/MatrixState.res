@@ -21,8 +21,8 @@ let roomIdsBulastEventOriginServerTsDesc: Jotai.Atom.t<
 > = Jotai.Atom.makeComputed(({get}) => {
   get(joinedRooms)
   ->Js.Dict.entries
-  ->Js.Array2.map(((roomId, _)) => get(rooms(roomId->Matrix.RoomId.fromString)))
-  ->Js.Array2.sortInPlaceWith((roomA, roomB) =>
+  ->ArrayX.map(((roomId, _)) => get(rooms(roomId->Matrix.RoomId.fromString)))
+  ->ArrayX.sortInPlaceWith((roomA, roomB) =>
     switch roomB.lastEventOriginServerTs->Option.getWithDefault(0.) -.
       roomA.lastEventOriginServerTs->Option.getWithDefault(0.) {
     | v if v < 0. => -1
@@ -30,7 +30,7 @@ let roomIdsBulastEventOriginServerTsDesc: Jotai.Atom.t<
     | _ => 0
     }
   )
-  ->Js.Array2.map(({id}) => id)
+  ->ArrayX.map(({id}) => id)
 })
 
 let roomEvents = Jotai.Atom.Family.make(
@@ -79,7 +79,7 @@ let useSync = () => {
     payload.rooms->Option.mapWithDefault((), payloadRooms =>
       payloadRooms.join
       ->Js.Dict.entries
-      ->Js.Array2.forEach(((roomId, room)) => {
+      ->ArrayX.forEach(((roomId, room)) => {
         let roomId = Matrix.RoomId.fromString(roomId)
         let joinedRoomsValue = get(joinedRooms)
         let roomAtom = rooms(roomId)
@@ -87,7 +87,7 @@ let useSync = () => {
           set(joinedRooms, joinedRoomsValue->Dict.add(roomId->Matrix.RoomId.toString, true))
         }
 
-        room.state.events->Js.Array2.forEach(event => {
+        room.state.events->ArrayX.forEach(event => {
           touchRoom((roomId, event.originServerTs))->ignore
           switch event.content {
           | Name({name}) => set(roomAtom, v => {...v, name: Some(name)})
@@ -101,8 +101,8 @@ let useSync = () => {
           ()
         })
 
-        room.timeline.events->Js.Array2.forEach(event => {
-          set(roomEvents(roomId), events => events->Js.Array2.concat([event]))
+        room.timeline.events->ArrayX.forEach(event => {
+          set(roomEvents(roomId), events => events->ArrayX.concat([event]))
           touchRoom((roomId, event.originServerTs))->ignore
           switch event.content {
           | Name({name}) => set(roomAtom, v => {...v, name: Some(name)})

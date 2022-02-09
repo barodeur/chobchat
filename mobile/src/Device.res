@@ -3,7 +3,7 @@ type err = StorageError(CrossSecureStore.err)
 let generateId = () => {
   let array = Js.TypedArray2.Uint8Array.fromLength(16)
   Crypto.getRandomValues(. array)
-  let randomPart = array->Base58.encode->Js.Array2.map(String.make(1, _))->Js.Array2.joinWith("")
+  let randomPart = array->Base58.encode->ArrayX.map(String.make(1, _))->ArrayX.joinWith("")
   `dev_${randomPart}`
 }
 

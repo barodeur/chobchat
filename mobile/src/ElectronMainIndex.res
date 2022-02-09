@@ -102,7 +102,7 @@ switch platform {
 | "linux" =>
   App.onSecondInstance((_, argv) => {
     argv
-    ->Belt.Array.get(argv->Belt.Array.length - 1)
+    ->ArrayX.get(argv->ArrayX.length - 1)
     ->Option.map(url =>
       if url->Js.String2.startsWith(`${protocol}:`) {
         processUrl(url)
