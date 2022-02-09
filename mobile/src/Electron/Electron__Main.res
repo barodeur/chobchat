@@ -50,13 +50,12 @@ module BrowserWindow = {
   type t = browserWindow
 
   @deriving(abstract)
-  type webPreferencesConfig = {@optional nodeIntegration: bool}
+  type webPreferencesConfig = {@optional nodeIntegration: bool, @optional contextIsolation: bool}
 
   @deriving(abstract)
   type config = {
     @optional width: int,
     @optional height: int,
-    @optional contextIsolation: bool,
     @optional webPreferences: webPreferencesConfig,
     @optional autoHideMenuBar: bool,
   }
