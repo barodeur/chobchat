@@ -17,14 +17,76 @@ type err =
   | Unknown
 
 module UserId = {
+  @unboxed
   type t = UserId(string)
 
   let fromString = str => UserId(str)
   let toString = (UserId(str)) => str
+  let equal = (a, b) => a == b
 
   let codec = Jzon.custom(
     id => id->toString->Jzon.encodeWith(Jzon.string),
-    json => json->Jzon.decodeWith(Jzon.string)->Result.map(id => UserId(id)),
+    json => json->Jzon.decodeWith(Jzon.string)->Result.map(fromString),
+  )
+
+  module Id = Belt.Id.MakeHashable({
+    type t = t
+    let hash = id => id->toString->Hashtbl.hash
+    let eq = equal
+  })
+}
+
+module RoomId = {
+  @unboxed
+  type t = RoomId(string)
+
+  let fromString = str => RoomId(str)
+  let toString = (RoomId(str)) => str
+  let equal = (a, b) => a == b
+
+  module Id = Belt.Id.MakeHashable({
+    type t = t
+    let hash = id => id->toString->Hashtbl.hash
+    let eq = equal
+  })
+
+  module HashMap = {
+    type t<'value> = Belt.HashMap.t<t, 'value, Id.identity>
+
+    let codec = itemCodec => {
+      let subCodec = itemCodec->Jzon.dict
+      Jzon.custom(
+        v =>
+          v
+          ->Belt.HashMap.toArray
+          ->ArrayX.map(((k, v)) => (k->toString, v))
+          ->Js.Dict.fromArray
+          ->Jzon.encodeWith(subCodec),
+        json =>
+          json
+          ->Jzon.decodeWith(subCodec)
+          ->Result.map(dict =>
+            dict
+            ->Js.Dict.entries
+            ->ArrayX.map(((k, v)) => (k->fromString, v))
+            ->Belt.HashMap.fromArray(~id=module(Id))
+          ),
+      )
+    }
+  }
+}
+
+module EventId = {
+  @unboxed
+  type t = EventId(string)
+
+  let fromString = str => EventId(str)
+  let toString = (EventId(str)) => str
+  let equal = (a, b) => a == b
+
+  let codec = Jzon.custom(
+    id => id->toString->Jzon.encodeWith(Jzon.string),
+    json => json->Jzon.decodeWith(Jzon.string)->Result.map(fromString),
   )
 }
 
@@ -194,12 +256,27 @@ module Login = {
     )
 }
 
-module RoomId = {
-  type t = RoomId(string)
+module ReadMarker = {
+  module InputPayload = {
+    @deriving(abstract)
+    type t = {fullyRead: EventId.t, @optional read: EventId.t}
+    let make = t
 
-  let fromString = str => RoomId(str)
-  let toString = (RoomId(str)) => str
-  let equal = (a, b) => String.equal(a->toString, b->toString)
+    let codec = Jzon.object2(
+      input => (input->fullyReadGet, input->readGet),
+      ((fullyRead, read)) => make(~fullyRead, ~read?, ())->Ok,
+      Jzon.field("m.fully_read", EventId.codec),
+      Jzon.field("m.read", EventId.codec)->Jzon.optional,
+    )
+  }
+  let inputPayload = InputPayload.make
+
+  let update = (client, ~roomId, ~inputPayload) =>
+    client->fetch(
+      ~method_=Post,
+      ~body=Fetch.BodyInit.make(inputPayload->Jzon.encodeStringWith(InputPayload.codec)),
+      `/rooms/${roomId->RoomId.toString}/read_markers`,
+    )
 }
 
 module EventContent = {
@@ -251,13 +328,25 @@ module EventContent = {
     )
   }
 
-  type t = Name(Name.t) | Message(Message.t) | Member(Member.t)
+  module FullyRead = {
+    type t = {eventId: EventId.t}
+
+    let typeStr = "m.fully_read"
+    let codec = Jzon.object1(
+      ({eventId}) => eventId,
+      eventId => {eventId: eventId}->Ok,
+      Jzon.field("event_id", EventId.codec),
+    )
+  }
+
+  type t = Name(Name.t) | Message(Message.t) | Member(Member.t) | FullyRead(FullyRead.t)
 
   let typeStr = content =>
     switch content {
     | Name(_) => Name.typeStr
     | Message(_) => Message.typeStr
     | Member(_) => Member.typeStr
+    | FullyRead(_) => FullyRead.typeStr
     }
 
   let toJson = content =>
@@ -265,6 +354,7 @@ module EventContent = {
     | Name(name) => name->Jzon.encodeWith(Name.codec)
     | Message(message) => message->Jzon.encodeWith(Message.codec)
     | Member(member) => member->Jzon.encodeWith(Member.codec)
+    | FullyRead(fullyRead) => fullyRead->Jzon.encodeWith(FullyRead.codec)
     }
 
   let fromJson = (type_, json) =>
@@ -273,13 +363,15 @@ module EventContent = {
     | "m.room.message" =>
       json->Jzon.decodeWith(Message.codec)->Result.map(message => Message(message))
     | "m.room.member" => json->Jzon.decodeWith(Member.codec)->Result.map(member => Member(member))
+    | "m.fully_read" =>
+      json->Jzon.decodeWith(FullyRead.codec)->Result.map(fullyRead => FullyRead(fullyRead))
     | _ => Error(#UnexpectedJsonValue([Field("type")], type_))
     }
 }
 
 module SyncStateEvent = {
   type t = {
-    eventId: string,
+    eventId: EventId.t,
     sender: UserId.t,
     stateKey: string,
     content: EventContent.t,
@@ -308,7 +400,7 @@ module SyncStateEvent = {
       })
     },
     Jzon.field("type", Jzon.string),
-    Jzon.field("event_id", Jzon.string),
+    Jzon.field("event_id", EventId.codec),
     Jzon.field("sender", UserId.codec),
     Jzon.field("state_key", Jzon.string),
     Jzon.field("content", Jzon.json),
@@ -334,7 +426,7 @@ module SyncRoomEvent = {
   }
 
   type t = {
-    id: string,
+    eventId: EventId.t,
     sender: UserId.t,
     content: EventContent.t,
     unsigned: UnsignedData.t,
@@ -342,25 +434,25 @@ module SyncRoomEvent = {
   }
 
   let codec = Jzon.object6(
-    ({id, sender, content, unsigned, originServerTs}) => (
-      id,
+    ({eventId, sender, content, unsigned, originServerTs}) => (
+      eventId,
       sender,
       content->EventContent.typeStr,
       content->EventContent.toJson,
       unsigned,
       originServerTs,
     ),
-    ((id, sender, type_, contentJson, unsigned, originServerTs)) => {
+    ((eventId, sender, type_, contentJson, unsigned, originServerTs)) => {
       let contentRes = EventContent.fromJson(type_, contentJson)
       contentRes->Belt.Result.map(content => {
-        id: id,
+        eventId: eventId,
         sender: sender,
         content: content,
         unsigned: unsigned,
         originServerTs: originServerTs,
       })
     },
-    Jzon.field("event_id", Jzon.string),
+    Jzon.field("event_id", EventId.codec),
     Jzon.field("sender", UserId.codec),
     Jzon.field("type", Jzon.string),
     Jzon.field("content", Jzon.json),
@@ -368,10 +460,6 @@ module SyncRoomEvent = {
     Jzon.field("origin_server_ts", Jzon.float),
   )
 }
-
-// module Event = {
-//   type t = RoomEvent((string, RoomEvent.t))
-// }
 
 module Filter = {
   module State = {
@@ -403,7 +491,6 @@ module Filter = {
   let codec = Jzon.object1(
     filter => filter->roomGet,
     room => t(~room?, ())->Ok,
-    // Jzon.field("include_redundant_members", Jzon.bool)->Jzon.optional,
     Jzon.field("room", Room.codec)->Jzon.optional,
   )
 }
@@ -442,24 +529,48 @@ module Timeline = {
   )
 }
 
-module JoinedRoom = {
-  type t = {state: State.t, timeline: Timeline.t}
+module AccountDataEvent = {
+  type t = {content: EventContent.t}
 
   let codec = Jzon.object2(
-    ({state, timeline}) => (state, timeline),
-    ((state, timeline)) => {state: state, timeline: timeline}->Ok,
+    ({content}) => (content->EventContent.typeStr, content->EventContent.toJson),
+    ((type_, content)) =>
+      EventContent.fromJson(type_, content)->Result.map(content => {content: content}),
+    Jzon.field("type", Jzon.string),
+    Jzon.field("content", Jzon.json),
+  )
+}
+
+module AccountData = {
+  type t = {events: array<AccountDataEvent.t>}
+
+  let codec = Jzon.object1(
+    ({events}) => events,
+    events => {events: events}->Ok,
+    Jzon.field("events", AccountDataEvent.codec->arrayFilter),
+  )
+}
+
+module JoinedRoom = {
+  type t = {accountData: AccountData.t, state: State.t, timeline: Timeline.t}
+
+  let codec = Jzon.object3(
+    ({accountData, state, timeline}) => (accountData, state, timeline),
+    ((accountData, state, timeline)) =>
+      {accountData: accountData, state: state, timeline: timeline}->Ok,
+    Jzon.field("account_data", AccountData.codec),
     Jzon.field("state", State.codec),
     Jzon.field("timeline", Timeline.codec),
   )
 }
 
 module Rooms = {
-  type t = {join: Js.Dict.t<JoinedRoom.t>}
+  type t = {join: Belt.HashMap.t<RoomId.t, JoinedRoom.t, RoomId.Id.identity>}
 
   let codec = Jzon.object1(
     ({join}) => join,
     join => {join: join}->Ok,
-    Jzon.field("join", JoinedRoom.codec->Jzon.dict),
+    Jzon.field("join", JoinedRoom.codec->RoomId.HashMap.codec),
   )
 }
 

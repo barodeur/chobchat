@@ -1,3 +1,4 @@
+@unboxed
 type t = Ms(int)
 
 let ms: int => t = ms => Ms(ms)
