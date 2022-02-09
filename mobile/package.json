@@ -70,7 +70,8 @@
   },
   "resolutions": {
     "axios": "^0.21.2",
-    "immer": "^9.0.6"
+    "immer": "^9.0.6",
+    "xdl/tar": "~4.4.14"
   },
   "private": true,
   "name": "chobchat",
