@@ -1,14 +1,6 @@
 open ReactNative
 open Style
 
-// type message = {
-//   id: Matrix.EventId.t,
-//   body: string,
-//   sender: Matrix.UserId.t,
-//   variant: variant,
-//   age: Duration.t,
-// }
-
 type err = AuthError(Authentication.err) | NotAuthenticated
 
 let inverted = switch PlatformX.platform {
