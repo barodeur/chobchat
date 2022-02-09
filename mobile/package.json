@@ -70,7 +70,8 @@
   },
   "resolutions": {
     "axios": "^0.21.2",
-    "immer": "^9.0.6"
+    "immer": "^9.0.6",
+    "node-fetch": "~2.6.7"
   },
   "private": true,
   "name": "chobchat",
