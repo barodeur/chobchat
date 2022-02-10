@@ -9,6 +9,8 @@ let protocol = "chobchat"
 
 let boolRes = App.setAsDefaultProtocolClient(protocol)
 
+Updater.checkForUpdatesAndNotify()
+
 let isDevelopment =
   nodeEnv->Js.Undefined.toOption->Option.mapWithDefault(false, env => env != "production")
 
