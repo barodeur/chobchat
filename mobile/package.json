@@ -69,6 +69,7 @@
     "rescript": "^9.1.4"
   },
   "resolutions": {
+    "@expo/electron-adapter/@expo/config/@expo/config-plugins/@expo/plist": "~0.0.15",
     "axios": "^0.21.2",
     "expo-cli/xdl/tar": "~4.4.19",
     "glob-parent": "~5.1.2",
