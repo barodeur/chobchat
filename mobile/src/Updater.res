@@ -1,5 +1,3 @@
-// open ElectronUpdater
-
 let autoUpdater = ElectronUpdater.autoUpdater
 
 let checkForUpdatesAndNotify = () => autoUpdater->ElectronUpdater.checkForUpdatesAndNotify
