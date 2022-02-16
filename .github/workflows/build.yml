@@ -98,7 +98,7 @@ jobs:
       - name: Setup keychain
         working-directory: ${{env.WORKING_DIRECTORY}}
         run: |
-          echo $MACOS_CERTIFICATE | base64 —decode > certificate.p12
+          echo $MACOS_CERTIFICATE | base64 -—decode > certificate.p12
           security create-keychain -p $KEYCHAIN_PWD build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p $KEYCHAIN_PWD build.keychain
