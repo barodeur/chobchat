@@ -5,6 +5,7 @@
     "dev:mobile:start": "expo start",
     "dev:web:start": "next dev",
     "dist:linux": "electron-builder --config ./electron-builder-config.yaml -l -p never",
+    "dist:macos": "electron-builder --config ./electron-builder-config.yaml -m -p never",
     "eas-build-post-install": "yarn re:build",
     "eject": "expo eject",
     "electron:build": "electron-webpack",
