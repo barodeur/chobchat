@@ -1,6 +1,7 @@
 appId: "fr.chobert.chobchat"
 extraMetadata:
   main: "main.js"
+afterSign: notarize.js
 files:
   - from: "dist/main/"
     to: "./"
@@ -9,6 +10,7 @@ files:
     to: "./"
     filter: ["**/*"]
   - package.json
+  - "entitlements.mac.plist"
 productName: "ChobChat"
 linux:
   executableName: "chobchat"
@@ -24,7 +26,14 @@ linux:
         - armv7l
         - arm64
 mac:
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: "entitlements.mac.plist"
+  entitlementsInherit: "entitlements.mac.plist"
   target:
     - target: dmg
       arch:
-        - x64
+        - universal
+    - target: zip
+      arch:
+        - universal
