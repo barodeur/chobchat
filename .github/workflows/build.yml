@@ -78,6 +78,9 @@ jobs:
       MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
       MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
       KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PWD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_ID_PWD: ${{ secrets.APPLE_ID_PWD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
