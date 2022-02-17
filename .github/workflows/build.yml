@@ -30,6 +30,7 @@ jobs:
     env:
       WORKING_DIRECTORY: ./mobile
       _PACKAGE_VERSION: ${{ needs.setup.outputs.package_version }}
+      HOMESERVER_URL: ${{ secrets.HOMESERVER_URL }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -81,6 +82,7 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_ID_PWD: ${{ secrets.APPLE_ID_PWD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      HOMESERVER_URL: ${{ secrets.HOMESERVER_URL }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
