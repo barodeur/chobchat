@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       WORKING_DIRECTORY: ./mobile
+      HOMESERVER_URL: ${{ secrets.HOMESERVER_URL }}
     outputs:
       package_version: ${{ steps.retrieve-version.outputs.package_version }}
     steps:
