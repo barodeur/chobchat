@@ -68,5 +68,6 @@ export default {
   extra: {
     ...config,
     commitSha: process.env.GITHUB_SHA || process.env.VERCEL_GIT_COMMIT_SHA,
+    repository: packageJson.repository
   }
 }
