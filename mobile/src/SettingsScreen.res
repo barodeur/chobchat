@@ -26,5 +26,16 @@ let make = (~navigation as _, ~route as _) => {
       iconComponent={props =>
         <Icon.Feather name="power" color={props["color"]} size={16.->Style.dp} />}
     />
+    <View style={Style.viewStyle(~marginTop=10.->Style.dp, ~alignItems=#center, ())}>
+      <TextX style={Style.textStyle(~color="rgba(0, 0, 0, 0.2)", ())}>
+        {
+          let manifest = ExpoConstants.constants.manifest
+          `${manifest.name} v${manifest.version}${manifest.extra.commitSha->Belt.Option.mapWithDefault(
+              "",
+              sha => ` - ${sha}`,
+            )}`->React.string
+        }
+      </TextX>
+    </View>
   </View>
 }
