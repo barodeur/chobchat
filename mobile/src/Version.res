@@ -18,14 +18,5 @@ let str = {
 }
 
 @react.component
-let make = (~color="rgba(0, 0, 0, 0.2)") => {
-  let handlePress = React.useMemo0(((), _) => {
-    Linking.openURL(url)->ignore
-  })
-
-  <TouchableOpacity onPress={handlePress}>
-    <TextX accessibilityRole=#link href=url style={Style.textStyle(~color, ())}>
-      {str->React.string}
-    </TextX>
-  </TouchableOpacity>
-}
+let make = (~color="rgba(0, 0, 0, 0.2)") =>
+  <Link href=url textStyle={Style.textStyle(~color, ())}> {str->React.string} </Link>
