@@ -209,34 +209,34 @@ module Authenticate = {
     }, [queryLoginToken])
 
     <ReactNative.SafeAreaView
-      style={ReactNative.Style.viewStyle(
-        ~flex=1.,
-        ~backgroundColor=Colors.green,
-        ~justifyContent=#center,
-        (),
-      )}>
-      <ReactNative.Image
-        style={ReactNative.Style.imageStyle(
-          ~alignSelf=#center,
-          ~width=80.->ReactNative.Style.dp,
-          ~height=80.->ReactNative.Style.dp,
-          ~borderRadius=12.,
-          ~marginBottom=20.->ReactNative.Style.dp,
-          (),
-        )}
-        source={ReactNative.Image.Source.fromRequired(
-          ReactNative.Packager.require("../assets/icon.png"),
-        )}
-      />
-      {switch (matrixClient, flows) {
-      | (Ok(client), Ok(flows)) =>
-        flows
-        ->ArrayX.mapi((flow, idx) =>
-          <Flow key={idx->Belt.Int.toString} flow redirectUrl matrixClient=client />
-        )
-        ->React.array
-      | _ => <Text> {"Impossible de charger les flows"->React.string} </Text>
-      }}
+      style={ReactNative.Style.viewStyle(~flex=1., ~backgroundColor=Colors.green, ())}>
+      <View style={Style.viewStyle(~flex=1., ~justifyContent=#center, ())}>
+        <ReactNative.Image
+          style={ReactNative.Style.imageStyle(
+            ~alignSelf=#center,
+            ~width=80.->ReactNative.Style.dp,
+            ~height=80.->ReactNative.Style.dp,
+            ~borderRadius=12.,
+            ~marginBottom=20.->ReactNative.Style.dp,
+            (),
+          )}
+          source={ReactNative.Image.Source.fromRequired(
+            ReactNative.Packager.require("../assets/icon.png"),
+          )}
+        />
+        {switch (matrixClient, flows) {
+        | (Ok(client), Ok(flows)) =>
+          flows
+          ->ArrayX.mapi((flow, idx) =>
+            <Flow key={idx->Belt.Int.toString} flow redirectUrl matrixClient=client />
+          )
+          ->React.array
+        | _ => <Text> {"Impossible de charger les flows"->React.string} </Text>
+        }}
+      </View>
+      <View style={Style.viewStyle(~alignItems=#center, ~marginVertical=10.->Style.dp, ())}>
+        <Version color="rgba(255, 255, 255, 0.2)" />
+      </View>
     </ReactNative.SafeAreaView>
   }
 }

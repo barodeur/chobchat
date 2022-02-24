@@ -26,5 +26,8 @@ let make = (~navigation as _, ~route as _) => {
       iconComponent={props =>
         <Icon.Feather name="power" color={props["color"]} size={16.->Style.dp} />}
     />
+    <View style={Style.viewStyle(~marginTop=10.->Style.dp, ~alignItems=#center, ())}>
+      <Version />
+    </View>
   </View>
 }

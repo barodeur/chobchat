@@ -2,6 +2,7 @@ import _ from "lodash";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import packageJson from "./package.json";
 
 let config;
 if (process.env.APP_ENV === "production") {
@@ -34,7 +35,7 @@ export default {
   name: "ChobChat",
   slug: "chobchat",
   scheme: config.scheme,
-  version: "1.0.0",
+  version: packageJson.version,
   orientation: "portrait",
   icon: "./assets/icon.png",
   splash: {
@@ -65,6 +66,8 @@ export default {
     favicon: "./assets/favicon.png"
   },
   extra: {
-    ...config
+    ...config,
+    commitSha: process.env.GITHUB_SHA || process.env.VERCEL_GIT_COMMIT_SHA,
+    repository: packageJson.repository
   }
 }
