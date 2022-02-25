@@ -132,3 +132,14 @@ jobs:
           name: latest-mac.yml
           path: ./mobile/dist/latest-mac.yml
           if-no-files-found: error
+  call-release:
+    runs-on: ubuntu-20.04
+    needs: [setup, build-linux, build-macos]
+    env:
+      WORKING_DIRECTORY: ./mobile
+      _PACKAGE_VERSION: ${{ needs.setup.outputs.package_version }}
+    steps:
+      - uses: ./.github/workflows.yml
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          build_run_id: ${{ github.run_id }}

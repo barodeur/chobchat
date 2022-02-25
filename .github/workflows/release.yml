@@ -2,14 +2,11 @@
 name: "Release"
 
 on:
-  workflow_run:
-    workflows:
-      - build
-    types:
-      - completed
-  push:
-    tags:
-      - v*
+  workflow_call:
+    inputs:
+      build_run_id:
+        required: true
+        type: number
 
 jobs:
   setup:
@@ -49,7 +46,7 @@ jobs:
         with:
           workflow: build.yml
           workflow_conclusion: success
-          commit: ${{ github.sha }}
+          run_id: ${{ inputs.build_run_id }}
       - name: Create release
         uses: ncipollo/release-action@95215a3cb6e6a1908b3c44e00b4fdb15548b1e09 # v2.8.5
         env:
