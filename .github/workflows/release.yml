@@ -46,7 +46,7 @@ jobs:
         uses: bitwarden/gh-actions/download-artifacts@23433be15ed6fd046ce12b6889c5184a8d9c8783
         with:
           workflow: build.yml
-          workflow_conclusion: success
+          # workflow_conclusion: success
           run_id: ${{ inputs.build_run_id }}
       - name: Create release
         uses: ncipollo/release-action@95215a3cb6e6a1908b3c44e00b4fdb15548b1e09 # v2.8.5
