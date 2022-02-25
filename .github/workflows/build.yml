@@ -141,7 +141,7 @@ jobs:
       WORKING_DIRECTORY: ./mobile
       _PACKAGE_VERSION: ${{ needs.setup.outputs.package_version }}
     steps:
-      - uses: ./.github/workflows.yml
+      - uses: ./.github/workflows/release.yml
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           build_run_id: ${{ github.run_id }}
