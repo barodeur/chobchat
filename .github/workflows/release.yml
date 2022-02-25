@@ -2,12 +2,11 @@
 name: release
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       build_run_id:
         required: true
-        type: string
-        description: ID of the build run
+        type: number
 
 jobs:
   setup:
