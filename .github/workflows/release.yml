@@ -47,7 +47,7 @@ jobs:
         with:
           workflow: build.yml
           # workflow_conclusion: success
-          run_id: ${{ inputs.build_run_id }}
+          run_id: ${{ github.events.inputs.build_run_id }}
       - name: Create release
         uses: ncipollo/release-action@95215a3cb6e6a1908b3c44e00b4fdb15548b1e09 # v2.8.5
         env:
