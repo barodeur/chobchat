@@ -2,16 +2,14 @@
 name: "Release"
 
 on:
-  workflow_dispatch:
-    inputs:
-      release_type:
-        description: "Release Options"
-        required: true
-        default: "Initial Release"
-        type: choice
-        options:
-          - Initial Release
-          - Redeploy
+  workflow_run:
+    workflows:
+      - build
+    types:
+      - completed
+  push:
+    tags:
+      - v*
 
 jobs:
   setup:
@@ -19,50 +17,39 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       package_version: ${{ steps.retrieve-version.outputs.package_version }}
-      branch-name: ${{ steps.branch.outputs.branch-name }}
     steps:
-      - name: Branch check
-        run: |
-          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
-            echo "==================================="
-            echo "[!] Can only release from the 'main' branch"
-            echo "==================================="
-            exit 1
-          fi
       - name: Checkout repo
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # v2.3.4
-
       - name: Get Package Version
         id: retrieve-version
         run: |
           PKG_VERSION=$(jq -r .version mobile/package.json)
           echo "::set-output name=package_version::$PKG_VERSION"
-      - name: Check to make sure Desktop release version has been bumped
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          latest_ver=$(hub release -L 1 -f '%T')
-          latest_ver=${latest_ver:1}
-          echo "Latest version: $latest_ver"
-          ver=${{ steps.retrieve-version.outputs.package_version }}
-          echo "Version: $ver"
-          if [ "$latest_ver" = "$ver" ] && \
-          [ "${{ github.event.inputs.release_type }}" == "Initial Release" ]; then
-            echo "Version has not been bumped!"
-            exit 1
-          fi
-      - name: Get branch name
-        id: branch
-        run: |
-          BRANCH_NAME=$(basename ${{ github.ref }})
-          echo "::set-output name=branch-name::$BRANCH_NAME"
+      # - name: Check to make sure Desktop release version has been bumped
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     latest_ver=$(hub release -L 1 -f '%T')
+      #     latest_ver=${latest_ver:1}
+      #     echo "Latest version: $latest_ver"
+      #     ver=${{ steps.retrieve-version.outputs.package_version }}
+      #     echo "Version: $ver"
+      #     if [ "$latest_ver" = "$ver" ] && \
+      #     [ "${{ github.event.inputs.release_type }}" == "Initial Release" ]; then
+      #       echo "Version has not been bumped!"
+      #       exit 1
+      #     fi
+      # - name: Get branch name
+      #   id: branch
+      #   run: |
+      #     BRANCH_NAME=$(basename ${{ github.ref }})
+      #     echo "::set-output name=branch-name::$BRANCH_NAME"
       - name: Download all artifacts
         uses: bitwarden/gh-actions/download-artifacts@23433be15ed6fd046ce12b6889c5184a8d9c8783
         with:
           workflow: build.yml
           workflow_conclusion: success
-          branch: ${{ steps.branch.outputs.branch-name }}
-
+          commit: ${{ github.sha }}
       - name: Create release
         uses: ncipollo/release-action@95215a3cb6e6a1908b3c44e00b4fdb15548b1e09 # v2.8.5
         env:
