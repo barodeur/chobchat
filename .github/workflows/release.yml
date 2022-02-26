@@ -6,7 +6,7 @@ on:
     inputs:
       build_run_id:
         required: true
-        type: number
+        type: string
 
 jobs:
   setup:
