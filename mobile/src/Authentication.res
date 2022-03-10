@@ -149,12 +149,7 @@ module IdentityProviderButton = {
         ]->Style.arrayOption}
       onPress={e => {
         e->ReactNative.Event.PressEvent.preventDefault
-        switch PlatformX.platform {
-        | Web(Electron) => ElectronRendererIPC.sendSync(OpenExternal(redirectUrl))->ignore
-        | _ => ExpoLinking.openURL(redirectUrl)
-        }
-
-        ()
+        Link.openURL(redirectUrl)
       }}>
       {_ =>
         <Text
