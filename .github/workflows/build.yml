@@ -139,6 +139,7 @@ jobs:
           if-no-files-found: error
   call-release:
     needs: [setup, build-linux, build-macos]
+    if: startsWith(github.ref, 'refs/tags/v')
     uses: ./.github/workflows/release.yml
     with:
       build_run_id: ${{ github.run_id }}
