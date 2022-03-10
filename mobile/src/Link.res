@@ -1,12 +1,16 @@
 open ReactNative
 
+let openURL = url =>
+  switch PlatformX.platform {
+  | Web(Electron) => ElectronRendererIPC.sendSync(OpenExternal(url))->ignore
+  | _ => ExpoLinking.openURL(url)
+  }
+
 @react.component
 let make = (~href, ~children, ~textStyle=?, ()) => {
-  let handlePress = React.useCallback1(_ => {
-    switch PlatformX.platform {
-    | Mobile(_) => Linking.openURL(href)->ignore
-    | _ => ()
-    }
+  let handlePress = React.useCallback1(e => {
+    e->ReactNative.Event.PressEvent.preventDefault
+    openURL(href)
   }, [href])
 
   <TouchableOpacity onPress=handlePress>
