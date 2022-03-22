@@ -64,6 +64,12 @@ jobs:
           name: ChobChat-${{ env._PACKAGE_VERSION }}-armv7l.AppImage
           path: ./mobile/dist/ChobChat-${{ env._PACKAGE_VERSION }}-armv7l.AppImage
           if-no-files-found: error
+      - name: Upload arm64 AppImage
+        uses: actions/upload-artifact@v2
+        with:
+          name: ChobChat-${{ env._PACKAGE_VERSION }}-arm64.AppImage
+          path: ./mobile/dist/ChobChat-${{ env._PACKAGE_VERSION }}-arm64.AppImage
+          if-no-files-found: error
       - name: Upload x64 AppImage
         uses: actions/upload-artifact@v2
         with:
