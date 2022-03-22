@@ -33,7 +33,7 @@ jobs:
           PKG_VERSION: ${{ steps.retrieve-version.outputs.package_version }}
         with:
           artifacts: "ChobChat-${{ env.PKG_VERSION }}-armv7l.AppImage,
-            ChobChat-${{ env.PKG_VERSION }}-arm64.AppImage
+            ChobChat-${{ env.PKG_VERSION }}-arm64.AppImage,
             ChobChat-${{ env.PKG_VERSION }}.AppImage,
             latest-linux.yml,
             ChobChat-${{ env.PKG_VERSION }}-universal-mac.zip,
